@@ -6,7 +6,6 @@ module Types
   , mkV3
   ) where
 
-import Data.SG.Geometry
 import Data.SG.Geometry.ThreeDim
 import Data.SG.Vector
 

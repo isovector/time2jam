@@ -1,5 +1,7 @@
 module Court where
 
+import Types
+
 courtLength :: Double
 courtLength = 28
 
@@ -30,3 +32,18 @@ courtRunoff = 2
 courtLongRadius :: Double
 courtLongRadius = 7.24
 
+data Court = Court
+  { _courtTopLeft  :: !V3
+  , _courtTopRight :: !V3
+  , _courtBotLeft  :: !V3
+  , _courtBotRight :: !V3
+  }
+
+court :: Court
+court = Court (mkV3 (-width) 0 (-depth))
+              (mkV3   width  0 (-depth))
+              (mkV3 (-width) 0   depth)
+              (mkV3   width  0   depth)
+  where
+    width = courtLength / 2
+    depth = courtDepth / 2
