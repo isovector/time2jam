@@ -5,13 +5,17 @@ module Types
   , Rel3
   , mkV3
   , rel3
+  , Prop
   ) where
 
 import Data.SG.Geometry.ThreeDim
 import Data.SG.Vector
+import Game.Sequoia.Types
 
 type V3 = Point3' Double
 type Rel3 = Rel3' Double
+type Prop = Prop' ()
+
 
 unpackV3 :: V3 -> (Double, Double, Double)
 unpackV3 (Point3 pos) = pos

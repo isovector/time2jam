@@ -1,18 +1,16 @@
 {-# LANGUAGE TemplateHaskell                                      #-}
 {-# LANGUAGE TupleSections                                        #-}
-{-# OPTIONS_GHC -fno-warn-name-shadowing -fno-warn-unused-do-bind #-}
 
 module Capsule where
 
-import Data.Tuple (swap)
-import Control.Arrow ((***), second)
-import Game.Sequoia.Types
+import           Control.Arrow ((***), second)
 import           Control.Lens
 import           Control.Monad.RWS
-import Data.List (nub)
+import           Data.List (nub)
 import           Data.Map (Map)
 import qualified Data.Map as M
-import Data.Maybe (isJust)
+import           Data.Maybe (isJust)
+import           Game.Sequoia.Types
 import           Types
 
 data Capsule = Capsule
@@ -50,9 +48,9 @@ stepCapsules :: Ord a
 stepCapsules = do
   st <- M.toList <$> get
   -- Update positions and set rels to 0
-  sequence $ do
-    (a, (cap, rel)) <- st
-    return $ modify $ M.insert a (moveCapsule rel cap, rel3 0 0 0)
+  sequence_ $ do
+    (a, (cap, v)) <- st
+    return $ modify $ M.insert a (moveCapsule v cap, rel3 0 0 0)
 
   -- Perform pairwise hit-checks
   st' <- M.toList <$> get
@@ -74,10 +72,9 @@ merge (p1, r1) (_, r2) = (p1, r1 + r2)
 updateCapsules :: (Ord a)
                => [(a, Capsule)]
                -> [(a, Rel3)]
-               -> ([(a, a)], [(a, Capsule)])
+               -> ([(a, Capsule)], [(a, a)])
 updateCapsules caps rels
-    = (nub *** (fmap cleanup . M.toList))
-    . swap
+    = (fmap cleanup . M.toList *** nub)
     . wat
     . runRWS (replicateM_ precision stepCapsules) ()
     . M.unionWith merge (asMap (, rel3 0 0 0) caps)

@@ -1,36 +1,10 @@
 module Court where
 
+import Game.Sequoia
+import Game.Sequoia.Color
 import Types
-
-courtLength :: Double
-courtLength = 28
-
-courtGfxLength :: Double
-courtGfxLength = 1800
-
-courtDepth :: Double
-courtDepth = 15
-
-courtGfxDepth :: Double
-courtGfxDepth = 300
-
-courtBasketOffset :: Double
-courtBasketOffset = 1.575
-
-courtBasketHeight :: Double
-courtBasketHeight = 3.04
-
-courtBoardWidth :: Double
-courtBoardWidth = 1.8
-
-courtBoardHeight :: Double
-courtBoardHeight = 1.05
-
-courtRunoff :: Double
-courtRunoff = 2
-
-courtLongRadius :: Double
-courtLongRadius = 7.24
+import Constants
+import Camera
 
 data Court = Court
   { _courtTopLeft  :: !V3
@@ -47,3 +21,17 @@ court = Court (mkV3 (-width) 0 (-depth))
   where
     width = courtLength / 2
     depth = courtDepth / 2
+
+drawCourt :: Court -> Camera -> Prop
+drawCourt c cam = filled red
+                . toPoly (toScreen cam $ mkV3 0 0 0)
+                $ fmap (toScreen cam)
+                [ _courtTopLeft  c
+                , _courtTopRight c
+                , _courtBotRight c
+                , _courtBotLeft  c
+                ]
+
+toPoly :: Pos -> [Pos] -> Shape
+toPoly x = polygon x . fmap (flip posDif x)
+

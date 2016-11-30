@@ -1,9 +1,12 @@
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Camera where
 
+import Data.Default
+import Control.Lens
 import Game.Sequoia
-import Court
+import Constants
 import Types
 
 data Camera = Camera
@@ -13,6 +16,17 @@ data Camera = Camera
   , _camDepthMult :: Double
   , _camWidthMult :: Double
   }
+makeLenses ''Camera
+
+instance Default Camera where
+  def = Camera (mkV3 0 0 0)
+               (mkV3 0 0 0)
+               100
+               (courtGfxDepth / courtDepth)
+               (courtGfxLength / courtLength)
+
+moveCamera :: Rel3 -> Camera -> Camera
+moveCamera dx = camFocus %~ flip plusDir dx
 
 heightScaling :: Double
 heightScaling = 75
@@ -30,12 +44,12 @@ toScreen cam@(Camera {..}) world = mkPos x y
 depthMod :: Camera -> V3 -> Double
 depthMod cam world = 1 / ((getZ world - getZ (_camPos cam)) / courtDepth + 1.5)
 
-updateCam :: Camera -> Double -> Camera
-updateCam cam@(Camera {..}) delta =
-    if distance _camFocus _camPos > _camDeadzone
+updateCam :: Double -> Camera -> Camera
+updateCam delta cam@(Camera {..}) =
+    if distance (toScreen cam _camFocus) (toScreen cam _camPos) > _camDeadzone
        then cam'
        else cam
   where
     cam' = cam { _camPos = plusDir _camPos dir  }
-    dir = scaleRel (delta * 2) $ v3Dif _camPos _camFocus
+    dir = scaleRel (delta * 2) $ posDif _camFocus _camPos
 

@@ -16,7 +16,10 @@ import Game.Sequoia.Color
 import Game.Sequoia.Keyboard
 import Game.Sequoia.Utils
 
-type Prop = Prop' ()
+import Data.Default
+import Court
+import Types
+import Camera
 
 square :: ( Member (Reader (Behavior Time)) r
           , Member (Reader (Behavior [Key])) r
@@ -35,10 +38,21 @@ square walls = do
             dpos <- sample $ arrows keys
             return $ tryMove walls [] sq (scaleRel (300 * dt) dpos)
 
+getCamera :: B Time -> B [Key] -> N (B Camera)
+getCamera clock keys =
+  fmap fst . foldmp def $ \cam -> do
+    dt   <- sample clock
+    dx <- sample $ arrows keys
+    let dpos = scaleRel (5 * dt) dx
+    return $ updateCam dt $ moveCamera (rel3 (getX dpos) 0 (getY dpos)) cam
+
+
 magic :: Engine -> Now (Behavior Prop)
 magic engine = do
     clock    <- getClock
     keyboard <- getKeyboard
+    cam      <- getCamera (deltaTime clock) keyboard
+    traceChanges "cameraPos: " $ _camFocus <$> cam
     let wall = filled blue $ circle (mkPos 35 35) 25
     (sq, addr) <- run . flip runReader (deltaTime clock)
                       . flip runReader keyboard
@@ -51,8 +65,9 @@ magic engine = do
 
     return $ do
         sq' <- sq
-        return $ group [sq', wall]
+        cam' <- sample cam
+        return $ drawCourt court cam'
 
-main = play (EngineConfig (640, 480) "hello") magic return
+main = play (EngineConfig (700, 400) "hello") magic return
 
 
