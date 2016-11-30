@@ -23,7 +23,7 @@ court = Court (mkV3 (-width) 0 (-depth))
     depth = courtDepth / 2
 
 drawCourt :: Court -> Camera -> Prop
-drawCourt c cam = filled red
+drawCourt c cam = filled (rgb 1 0.67 0.47)
                 . toPoly (toScreen cam $ mkV3 0 0 0)
                 $ fmap (toScreen cam)
                 [ _courtTopLeft  c

@@ -44,7 +44,11 @@ getCamera clock keys =
     dt   <- sample clock
     dx <- sample $ arrows keys
     let dpos = scaleRel (5 * dt) dx
-    return $ updateCam dt $ moveCamera (rel3 (getX dpos) 0 (getY dpos)) cam
+    return . updateCam dt
+           . moveCamera (rel3 (getX dpos)
+                              0
+                              (negate $ getY dpos))
+           $ cam
 
 
 magic :: Engine -> Now (Behavior Prop)
