@@ -63,7 +63,7 @@ stepPos as w = do
          . fmap (\s -> (s, flip peek w s))
          $ filter (/= me) as
     ids = fmap (\s -> (min s me, max s me)) $ fmap fst ints
-    mult = ((1 / 10) *)
+    mult = ((1 / 5) *)
          . minimum
          . fmap _capRadius
          $ cap : (snd <$> ints)
@@ -83,18 +83,7 @@ resolveCapsules :: (Ord a)
                -> ([(a, Capsule)], [(a, a)])
 resolveCapsules = second nub
                 . runWriter
-                . findFixedPoint stepAllPos
-
-findFixedPoint :: (Eq a, Monad m) => (a -> m a) -> a -> m a
-findFixedPoint f a = do
-  l <- sequence
-     . iterate (>>= f)
-     $ pure a
-  return . fst . head
-         . dropWhile (uncurry (/=))
-         $ pairwise (,) l
-  where
-    pairwise g xs = zipWith g xs $ tail xs
+                . stepAllPos
 
 manage :: ([a] -> N ([a]))
        -> [B ( a
@@ -112,7 +101,8 @@ manageCapsules :: [B ( Capsule
                      )]
                -> N (B [Capsule])
 manageCapsules = manage $ \caps -> do
-  let (caps', _) = resolveCapsules $ zip [(0 :: Int)..] caps
+  let (caps', hits) = resolveCapsules $ zip [(0 :: Int)..] caps
+  when (not $ null hits) $ void $ async $ putStrLn $ show hits
   return $ fmap snd caps'
 
 class Managed t where
