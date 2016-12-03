@@ -35,7 +35,7 @@ heightScaling = 75
 toScreen :: Camera -> V3 -> Pos
 toScreen cam@(Camera {..}) world = mkPos x y
   where
-    local = posDif world _camPos
+    local = posDif _camPos world
     dmod = depthMod cam world
     x = getX local * _camWidthMult * dmod
     y = negate
