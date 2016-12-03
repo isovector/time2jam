@@ -1,40 +1,30 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE OverloadedStrings #-}
+
 module Main where
 
-import Control.Applicative
-import Control.Monad
-import Game.Sequoia
-import Game.Sequoia.Color
-import Game.Sequoia.Keyboard
-import Game.Sequoia.Utils
-
 import Baller
-import Capsule
-import Data.Default
-import Court
-import Types
 import Camera
+import Capsule
+import Control.Lens
+import Court
+import Data.Default
+import Game.Sequoia
+import Game.Sequoia.Keyboard
+import Types
 
-getCamera :: B Time -> B [Key] -> N (B Camera)
-getCamera clock keys =
+getCamera :: B Time -> B V3 -> N (B Camera)
+getCamera clock pos =
   fmap fst . foldmp def $ \cam -> do
-    dt <- sample clock
-    -- dx <- sample $ arrows keys
-    -- let dpos = scaleRel (5 * dt) dx
+    dt    <- sample clock
+    focus <- sample pos
     return . updateCam dt
-           -- . moveCamera (rel3 (getX dpos) 0
-           --                    (negate $ getY dpos))
-           $ cam
+           $ cam & camFocus .~ focus
 
 
 magic :: Engine -> Now (Behavior Prop)
 magic _ = do
     clock    <- deltaTime <$> getClock
     keyboard <- getKeyboard
-    cam      <- getCamera clock keyboard
 
     b1 <- makeBaller (mkV3 0 0 0) $ \cap -> do
             dt <- sample clock
@@ -43,6 +33,8 @@ magic _ = do
             return . moveCapsule (rel3 (negate $ getX dpos) 0
                                  (getY dpos))
                    $ cap
+    cam <- getCamera clock $ view (bCap.capPos) <$> b1
+
     b2 <- makeBaller (mkV3 1 0 0) return
     b3 <- makeBaller (mkV3 2 0 0) return
     b4 <- makeBaller (mkV3 3 0 0) return

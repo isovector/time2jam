@@ -42,12 +42,3 @@ drawBaller cam b = filled (_bColor b)
     width = 50 * size
     height = 100 * size
 
-
--- drawCourt c cam = filled (rgb 1 0.67 0.47)
---                 . toPoly (toScreen cam $ mkV3 0 0 0)
---                 $ fmap (toScreen cam)
---                 [ _courtTopLeft  c
---                 , _courtTopRight c
---                 , _courtBotRight c
---                 , _courtBotLeft  c
---                 ]
