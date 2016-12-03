@@ -3,22 +3,22 @@
 
 module Capsule where
 
-import           Control.Arrow (second)
-import           Control.Comonad
-import           Control.Comonad.Store
-import           Control.Lens
-import           Control.Monad.Writer
-import           Data.List (nub)
-import qualified Data.Map as M
-import           Data.Maybe (isJust, fromJust)
-import           Game.Sequoia.Types
-import           Types
+import Data.List (nub)
+import Data.Maybe (isJust, fromJust)
+import Control.Lens
+import Game.Sequoia.Signal
+import Game.Sequoia.Types
+import Control.Comonad
+import Control.Comonad.Store
+import Control.Monad.Writer
+import Control.Arrow (second)
+import Types
 
 data Capsule = Capsule
   { _capPos :: V3
   , _capRadius :: Double
   , _capHeight :: Double
-  }
+  } deriving (Eq, Show)
 makeLenses ''Capsule
 
 moveCapsule :: Rel3 -> Capsule -> Capsule
@@ -76,18 +76,12 @@ stepAllPos caps = sequence $ fmap (liftM2 fmap (,) (flip peek w)) as
       $ head as
     as = fmap fst caps
 
-updateCapsules :: (Ord a)
+resolveCapsules :: (Ord a)
                => [(a, Capsule)]
-               -> [(a, Rel3)]
                -> ([(a, Capsule)], [(a, a)])
-updateCapsules caps rels
-    = second nub
-    . runWriter
-    . stepAllPos
-    . M.toList
-    . M.differenceWith ((Just .) . flip moveCapsule)
-                       (M.fromList caps)
-    $ M.fromList rels
+resolveCapsules = second nub
+                . runWriter
+                . findFixedPoint stepAllPos
 
 findFixedPoint :: (Eq a, Monad m) => (a -> m a) -> a -> m a
 findFixedPoint f a = do
@@ -99,3 +93,31 @@ findFixedPoint f a = do
          $ pairwise (,) l
   where
     pairwise g xs = zipWith g xs $ tail xs
+
+manage :: ([a] -> N ([a]))
+       -> [B ( a
+             , (a -> a) -> IO ()
+             )]
+       -> N (B [a])
+manage f mps = poll $ do
+  (bs, mbs) <- fmap unzip . sample $ sequenceA mps
+  res <- f bs
+  forM_ (zip res mbs) $ \(a, mb) -> sync . mb $ const a
+  return res
+
+manageCapsules :: [B ( Capsule
+                     , (Capsule -> Capsule) -> IO ()
+                     )]
+               -> N (B [Capsule])
+manageCapsules = manage $ \caps -> do
+  let (caps', _) = resolveCapsules $ zip [(0 :: Int)..] caps
+  return $ fmap snd caps'
+
+class Managed t where
+  managedCapsule :: t -> B Capsule
+  managedInput   :: t -> (Capsule -> Capsule) -> IO ()
+
+managed :: Managed t => t -> (B Capsule, (Capsule -> Capsule) -> IO ())
+managed t = (managedCapsule t, managedInput t)
+
+

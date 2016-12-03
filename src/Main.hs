@@ -41,12 +41,11 @@ square walls = do
 getCamera :: B Time -> B [Key] -> N (B Camera)
 getCamera clock keys =
   fmap fst . foldmp def $ \cam -> do
-    dt   <- sample clock
+    dt <- sample clock
     dx <- sample $ arrows keys
     let dpos = scaleRel (5 * dt) dx
     return . updateCam dt
-           . moveCamera (rel3 (getX dpos)
-                              0
+           . moveCamera (rel3 (getX dpos) 0
                               (negate $ getY dpos))
            $ cam
 
