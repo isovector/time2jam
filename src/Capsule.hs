@@ -3,12 +3,10 @@
 
 module Capsule where
 
-import           Control.Arrow (second)
 import           Control.Comonad
 import           Control.Comonad.Store
 import           Control.Lens
-import           Control.Monad (join)
-import           Data.List (nub)
+import           Control.Monad.Writer
 import qualified Data.Map as M
 import           Data.Maybe (isJust, fromJust)
 import           Game.Sequoia.Types
@@ -45,11 +43,15 @@ checkCapsules a b = isJust (capsuleIntersection a b)
     by = getY $ _capPos b
 
 
-stepPos :: Ord s => [s] -> Store s Capsule -> (Capsule, [(s, s)])
-stepPos as w = (, ids)
-             . flip moveCapsule cap
-             . mconcat
-             $ fmap (scaleRel mult) forces
+stepPos :: Ord s
+        => [s]
+        -> Store s Capsule
+        -> Writer [(s, s)] Capsule
+stepPos as w = do
+  tell ids
+  pure . flip moveCapsule cap
+       . mconcat
+       $ fmap (scaleRel mult) forces
   where
     cap = extract w
     loc = _capPos cap
@@ -61,30 +63,36 @@ stepPos as w = (, ids)
     ids = fmap (\s -> (min s me, max s me)) $ fmap fst ints
     mult = 1 / fromIntegral (length forces)
 
-stepAllPos :: Ord s => [(s, Capsule)] -> ([(s, Capsule)], [(s, s)])
-stepAllPos caps = second (nub . join) . unzip $ fmap (\s -> let (p, i) = peek s w
-                               in ((s, p), i)) as
+stepAllPos :: forall s. Ord s
+           => [(s, Capsule)]
+           -> Writer [(s, s)] [(s, Capsule)]
+stepAllPos caps = sequence $ fmap (liftM2 fmap (,) (flip peek w)) as
   where
+    w :: Store s (Writer [(s, s)] Capsule)
     w = extend (stepPos as)
       . store (fromJust . flip lookup caps)
       $ head as
     as = fmap fst caps
-
-iterateN :: Eq b => Int -> (a -> (a, [b])) -> [b] -> a -> (a, [b])
-iterateN 0 _ b a = (a, b)
-iterateN n f b a = let (a', b') = f a
-                    in iterateN (n - 1) f (nub $ b ++ b') a'
 
 updateCapsules :: (Ord a)
                => [(a, Capsule)]
                -> [(a, Rel3)]
                -> ([(a, Capsule)], [(a, a)])
 updateCapsules caps rels
-    = iterateN precision stepAllPos []
+    = runWriter
+    . stepAllPos
     . M.toList
     . M.differenceWith ((Just .) . flip moveCapsule)
                        (M.fromList caps)
     $ M.fromList rels
-  where
-    precision = 10
 
+findFixedPoint :: (Eq a, Monad m) => (a -> m a) -> a -> m a
+findFixedPoint f a = do
+  l <- sequence
+     . iterate (>>= f)
+     $ pure a
+  return . fst . head
+         . dropWhile (uncurry (/=))
+         $ pairwise (,) l
+  where
+    pairwise g xs = zipWith g xs $ tail xs
