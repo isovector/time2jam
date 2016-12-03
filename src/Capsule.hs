@@ -58,19 +58,21 @@ stepPos as w = do
     cap = extract w
     loc = _capPos cap
     me  = pos w
-    forces = fmap (posDif loc . _capPos . snd) ints
+    forces = fmap (normalize . posDif loc . _capPos . snd) ints
     ints = filter (checkCapsules cap . snd)
          . fmap (\s -> (s, flip peek w s))
          $ filter (/= me) as
     ids = fmap (\s -> (min s me, max s me)) $ fmap fst ints
-    mult = 1 / fromIntegral (length forces)
+    mult = ((1 / 10) *)
+         . minimum
+         . fmap _capRadius
+         $ cap : (snd <$> ints)
 
-stepAllPos :: forall s. Ord s
+stepAllPos :: Ord s
            => [(s, Capsule)]
            -> Writer [(s, s)] [(s, Capsule)]
 stepAllPos caps = sequence $ fmap (liftM2 fmap (,) (flip peek w)) as
   where
-    w :: Store s (Writer [(s, s)] Capsule)
     w = extend (stepPos as)
       . store (fromJust . flip lookup caps)
       $ head as
@@ -114,10 +116,10 @@ manageCapsules = manage $ \caps -> do
   return $ fmap snd caps'
 
 class Managed t where
-  managedCapsule :: t -> B Capsule
+  managedCapsule :: t -> Capsule
   managedInput   :: t -> (Capsule -> Capsule) -> IO ()
 
-managed :: Managed t => t -> (B Capsule, (Capsule -> Capsule) -> IO ())
+managed :: Managed t => t -> (Capsule, (Capsule -> Capsule) -> IO ())
 managed t = (managedCapsule t, managedInput t)
 
 
