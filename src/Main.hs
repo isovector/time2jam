@@ -30,7 +30,7 @@ magic _ = do
             dt <- sample clock
             dx <- sample $ arrows keyboard
             let dpos = scaleRel (5 * dt) dx
-            return . moveCapsule (rel3 (negate $ getX dpos) 0
+            return . moveCapsule (rel3 (getX dpos) 0
                                  (getY dpos))
                    $ cap
     cam <- getCamera clock $ view (bCap.capPos) <$> b1

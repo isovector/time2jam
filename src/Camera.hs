@@ -35,15 +35,14 @@ heightScaling = 75
 toScreen :: Camera -> V3 -> Pos
 toScreen cam@(Camera {..}) world = mkPos x y
   where
-    local = posDif _camPos world
+    local = posDif world _camPos
     dmod = depthMod cam world
     x = getX local * _camWidthMult * dmod
-    y = negate
-      $ getZ local * _camDepthMult
+    y = getZ local * _camDepthMult
       + getY local * heightScaling * dmod
 
 depthMod :: Camera -> V3 -> Double
-depthMod cam world = 1 / ((getZ world - getZ (_camPos cam)) / courtDepth + 1.5)
+depthMod cam world = 1 / ((getZ (_camPos cam) - getZ world) / courtDepth + 1.5)
 
 updateCam :: Double -> Camera -> Camera
 updateCam delta cam@(Camera {..}) =
