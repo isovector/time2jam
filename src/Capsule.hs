@@ -3,10 +3,12 @@
 
 module Capsule where
 
+import           Control.Arrow (second)
 import           Control.Comonad
 import           Control.Comonad.Store
 import           Control.Lens
 import           Control.Monad.Writer
+import           Data.List (nub)
 import qualified Data.Map as M
 import           Data.Maybe (isJust, fromJust)
 import           Game.Sequoia.Types
@@ -79,7 +81,8 @@ updateCapsules :: (Ord a)
                -> [(a, Rel3)]
                -> ([(a, Capsule)], [(a, a)])
 updateCapsules caps rels
-    = runWriter
+    = second nub
+    . runWriter
     . stepAllPos
     . M.toList
     . M.differenceWith ((Just .) . flip moveCapsule)
