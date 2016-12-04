@@ -39,17 +39,18 @@ magic _ = do
     let netDetector = detector NNetL (mkV3 3 0 0) 1 1
 
     -- TODO(sandy): we need to draw these capsules
-    manageCapsules $ pure netDetector : (fmap managed <$> [b1])
+    bs <- manageCapsules $ pure netDetector : (fmap managed <$> [b1])
 
     return $ do
         cam' <- sample cam
-        ballers <- sample $ sequenceA [b1]
+        ballers  <- sample $ sequenceA [b1]
+        ballers' <- reconcile _capName bCap ballers <$> sample bs
 
         return $ group $ [ drawCourt court cam'
                          , drawBasket cam' unitX
                          , drawBasket cam' (-unitX)
                          ]
-                       ++ fmap (drawBaller cam') ballers
+                       ++ fmap (drawBaller cam') ballers'
 
 
 main :: IO ()

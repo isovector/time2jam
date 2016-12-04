@@ -1,18 +1,20 @@
+{-# LANGUAGE RankNTypes      #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TupleSections   #-}
 
 module Capsule where
 
-import Data.List (nub)
-import Data.Maybe (isJust, fromJust)
-import Control.Lens
-import Game.Sequoia.Signal
-import Game.Sequoia.Types
-import Control.Comonad
-import Control.Comonad.Store
-import Control.Monad.Writer
-import Control.Arrow (second)
-import Types
+import           Control.Arrow (second)
+import           Control.Comonad
+import           Control.Comonad.Store
+import           Control.Lens
+import           Control.Monad.Writer
+import           Data.List (nub)
+import qualified Data.Map as M
+import           Data.Maybe (isJust, fromJust)
+import           Game.Sequoia.Signal
+import           Game.Sequoia.Types
+import           Types
 
 data Capsule = Capsule
   { _capName      :: Name
@@ -107,6 +109,20 @@ manage f mps = poll $ do
   res <- f bs
   forM_ (zip res mbs) $ \(a, mb) -> sync . mb $ const a
   return res
+
+reconcile :: Ord k
+          => (c -> k)
+          -> Lens' a c
+          -> [a]
+          -> [c]
+          -> [a]
+reconcile proj lx as cs =
+  fmap snd . M.toList
+           . M.differenceWith (\a c -> Just $ lx .~ c $ a)
+                              (toMap (proj . view lx) as)
+           $ toMap proj cs
+  where
+    toMap f x = M.fromList $ fmap ((,) =<< f) x
 
 manageCapsules :: [B ( Capsule
                      , (Capsule -> Capsule) -> IO ()
