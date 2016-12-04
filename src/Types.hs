@@ -8,6 +8,9 @@ module Types
   , Prop
   , toPoly
   , ellipse
+  , unitX
+  , unitY
+  , unitZ
   ) where
 
 import Data.SG.Geometry.ThreeDim
@@ -40,3 +43,12 @@ ellipse p w h = polygon p
     drad = 2 * pi / fromIntegral samples
     rad2rel :: Double -> Rel
     rad2rel rad = rel (cos rad * w / 2) (sin rad * h / 2)
+
+unitX :: Rel3
+unitX = rel3 1 0 0
+
+unitY :: Rel3
+unitY = rel3 0 1 0
+
+unitZ :: Rel3
+unitZ = rel3 0 0 1

@@ -4,6 +4,7 @@
 module Main where
 
 import Baller
+import Basket
 import Camera
 import Capsule
 import Control.Lens
@@ -49,7 +50,10 @@ magic _ = do
         cam' <- sample cam
         ballers <- sample $ sequenceA [b1, b2, b3, b4, b5, b6]
 
-        return $ group $ [ drawCourt court cam' ]
+        return $ group $ [ drawCourt court cam'
+                         , drawBasket cam' unitX
+                         , drawBasket cam' (-unitX)
+                         ]
                        ++ fmap (drawBaller cam') ballers
 
 
