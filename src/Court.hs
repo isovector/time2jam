@@ -32,6 +32,3 @@ drawCourt c cam = filled (rgb 1 0.67 0.47)
                 , _courtBotLeft  c
                 ]
 
-toPoly :: Pos -> [Pos] -> Shape
-toPoly x = polygon x . fmap (flip posDif x)
-

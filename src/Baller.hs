@@ -19,7 +19,7 @@ makeLenses ''Baller
 ballerCapsule :: Capsule
 ballerCapsule = Capsule
   { _capPos    = mkV3 0 0 0
-  , _capRadius = 0.5
+  , _capRadius = 0.75
   , _capHeight = 2
   }
 
@@ -34,11 +34,25 @@ instance Managed Baller where
   managedInput = view bInput
 
 drawBaller :: Camera -> Baller -> Prop
-drawBaller cam b = filled (_bColor b)
-                 $ rect (toScreen cam pos) width height
+drawBaller cam b =
+  group [ traced black
+          $ ellipse (toScreen cam pos)
+                    shadowWidth
+                    shadowHeight
+        , traced (_bColor b)
+          $ polygon (toScreen cam pos)
+            [ rel (-width) 0
+            , rel (-width) height
+            , rel   width  height
+            , rel   width 0
+            ]
+        ]
+
   where
     pos = b ^. bCap . capPos
     size = depthMod cam pos
-    width = 50 * size
-    height = 100 * size
+    width = 50 * size / 2
+    height = negate $ 100 * size
+    shadowWidth = 80 * size
+    shadowHeight = 30 * size
 

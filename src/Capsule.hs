@@ -88,11 +88,11 @@ resolveCapsules = second nub
 findFixedPoint :: (Eq a, Monad m) => (a -> m a) -> a -> m a
 findFixedPoint f a = go a (f a)
   where
-    go a ma = do
-      a' <- ma
-      if a == a'
-         then return a
-         else go a' (f a')
+     go b mb = do
+      b' <- mb
+      if b == b'
+         then return b
+         else go b' (f b')
 
 manage :: ([a] -> N ([a]))
        -> [B ( a

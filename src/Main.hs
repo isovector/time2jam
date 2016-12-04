@@ -1,4 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# OPTIONS_GHC -fno-warn-unused-do-bind #-}
 
 module Main where
 
@@ -41,7 +42,8 @@ magic _ = do
     b5 <- makeBaller (mkV3 2 0 0.6) return
     b6 <- makeBaller (mkV3 2 0 (-0.6)) return
 
-    _ <- manageCapsules $ fmap managed <$> [b1, b2, b3, b4, b5, b6]
+    -- TODO(sandy): we need to draw these capsules
+    manageCapsules $ fmap managed <$> [b1, b2, b3, b4, b5, b6]
 
     return $ do
         cam' <- sample cam
