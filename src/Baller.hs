@@ -16,18 +16,22 @@ data Baller = Baller
   }
 makeLenses ''Baller
 
-ballerCapsule :: Capsule
-ballerCapsule = Capsule
-  { _capPos       = mkV3 0 0 0
+ballerCapsule :: Int -> Capsule
+ballerCapsule n = Capsule
+  { _capName      = NBaller n
+  , _capPos       = mkV3 0 0 0
   , _capRadius    = 0.75
   , _capHeight    = 2
   , _capEphemeral = False
   }
 
 
-makeBaller :: V3 -> (Capsule -> N Capsule) -> N (B Baller)
-makeBaller p f = do
-  (cap, input) <- foldmp (ballerCapsule & capPos .~ p) f
+makeBaller :: Int
+           -> V3
+           -> (Capsule -> N Capsule)
+           -> N (B Baller)
+makeBaller n p f = do
+  (cap, input) <- foldmp (ballerCapsule n & capPos .~ p) f
   return $ Baller <$> cap <*> pure input <*> pure (rgb 0.67 0 0.47)
 
 instance Managed Baller where

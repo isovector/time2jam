@@ -24,19 +24,19 @@ getCamera clock pos =
            $ cam & camFocus .~ focus
 
 
-magic :: Engine -> Now (Behavior Prop)
+magic :: Engine -> N (B Prop)
 magic _ = do
     clock    <- deltaTime <$> getClock
     keyboard <- getKeyboard
 
-    b1 <- makeBaller (mkV3 0 0 0) $ \cap -> do
+    b1 <- makeBaller 0 (mkV3 0 0 0) $ \cap -> do
             dt <- sample clock
             dx <- sample $ arrows keyboard
             let dpos = scaleRel (5 * dt) dx
             return . flip moveCapsule cap
                    $ rel3 (getX dpos) 0 (getY dpos)
     cam <- getCamera clock $ view (bCap.capPos) <$> b1
-    let netDetector = detector (mkV3 3 0 0) 1 1
+    let netDetector = detector NNetL (mkV3 3 0 0) 1 1
 
     -- TODO(sandy): we need to draw these capsules
     manageCapsules $ pure netDetector : (fmap managed <$> [b1])

@@ -15,7 +15,8 @@ import Control.Arrow (second)
 import Types
 
 data Capsule = Capsule
-  { _capPos       :: V3
+  { _capName      :: Name
+  , _capPos       :: V3
   , _capRadius    :: Double
   , _capHeight    :: Double
   , _capEphemeral :: Bool
@@ -112,7 +113,7 @@ manageCapsules :: [B ( Capsule
                      )]
                -> N (B [Capsule])
 manageCapsules = manage $ \caps -> do
-  let (caps', hits) = resolveCapsules $ zip [(0 :: Int)..] caps
+  let (caps', hits) = resolveCapsules $ zip (fmap _capName caps) caps
   when (not $ null hits) $ sync $ putStrLn $ show hits
   return $ fmap snd caps'
 

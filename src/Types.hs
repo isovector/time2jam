@@ -11,6 +11,7 @@ module Types
   , unitX
   , unitY
   , unitZ
+  , Name (..)
   ) where
 
 import Data.SG.Geometry.ThreeDim
@@ -52,3 +53,10 @@ unitY = rel3 0 1 0
 
 unitZ :: Rel3
 unitZ = rel3 0 0 1
+
+data Name
+  = NBaller Int
+  | NNetL
+  | NNetR
+  deriving (Eq, Ord, Show)
+
