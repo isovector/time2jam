@@ -18,9 +18,10 @@ makeLenses ''Baller
 
 ballerCapsule :: Capsule
 ballerCapsule = Capsule
-  { _capPos    = mkV3 0 0 0
-  , _capRadius = 0.75
-  , _capHeight = 2
+  { _capPos       = mkV3 0 0 0
+  , _capRadius    = 0.75
+  , _capHeight    = 2
+  , _capEphemeral = False
   }
 
 

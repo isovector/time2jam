@@ -13,6 +13,7 @@ import Data.Default
 import Game.Sequoia
 import Game.Sequoia.Keyboard
 import Types
+import Objects
 
 getCamera :: B Time -> B V3 -> N (B Camera)
 getCamera clock pos =
@@ -32,23 +33,17 @@ magic _ = do
             dt <- sample clock
             dx <- sample $ arrows keyboard
             let dpos = scaleRel (5 * dt) dx
-            return . moveCapsule (rel3 (getX dpos) 0
-                                 (getY dpos))
-                   $ cap
+            return . flip moveCapsule cap
+                   $ rel3 (getX dpos) 0 (getY dpos)
     cam <- getCamera clock $ view (bCap.capPos) <$> b1
-
-    b2 <- makeBaller (mkV3 1 0 0) return
-    b3 <- makeBaller (mkV3 2 0 0) return
-    b4 <- makeBaller (mkV3 3 0 0) return
-    b5 <- makeBaller (mkV3 2 0 0.6) return
-    b6 <- makeBaller (mkV3 2 0 (-0.6)) return
+    let netDetector = detector (mkV3 3 0 0) 1 1
 
     -- TODO(sandy): we need to draw these capsules
-    manageCapsules $ fmap managed <$> [b1, b2, b3, b4, b5, b6]
+    manageCapsules $ pure netDetector : (fmap managed <$> [b1])
 
     return $ do
         cam' <- sample cam
-        ballers <- sample $ sequenceA [b1, b2, b3, b4, b5, b6]
+        ballers <- sample $ sequenceA [b1]
 
         return $ group $ [ drawCourt court cam'
                          , drawBasket cam' unitX
@@ -58,6 +53,7 @@ magic _ = do
 
 
 main :: IO ()
-main = play (EngineConfig (700, 400) "hello") magic return
+main = play config magic return
+  where config = EngineConfig (700, 400) "hello" $ rgb 0.6 0.6 0.6
 
 

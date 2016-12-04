@@ -1,7 +1,6 @@
 module Court where
 
 import Game.Sequoia
-import Game.Sequoia.Color
 import Types
 import Constants
 import Camera

@@ -15,9 +15,10 @@ import Control.Arrow (second)
 import Types
 
 data Capsule = Capsule
-  { _capPos :: V3
-  , _capRadius :: Double
-  , _capHeight :: Double
+  { _capPos       :: V3
+  , _capRadius    :: Double
+  , _capHeight    :: Double
+  , _capEphemeral :: Bool
   } deriving (Eq, Show)
 makeLenses ''Capsule
 
@@ -58,15 +59,16 @@ stepPos as w = do
     cap = extract w
     loc = _capPos cap
     me  = pos w
-    forces = fmap (normalize . posDif loc . _capPos . snd) ints
+    forces = fmap (normalize . posDif loc . _capPos . snd) realInts
     ints = filter (checkCapsules cap . snd)
          . fmap (\s -> (s, flip peek w s))
          $ filter (/= me) as
+    realInts = filter (not . _capEphemeral . snd) ints
     ids = fmap (\s -> (min s me, max s me)) $ fmap fst ints
     mult = ((1 / 10) *)
          . minimum
          . fmap _capRadius
-         $ cap : (snd <$> ints)
+         $ cap : (snd <$> realInts)
 
 stepAllPos :: Ord s
            => [(s, Capsule)]
