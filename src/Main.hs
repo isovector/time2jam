@@ -1,4 +1,5 @@
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ScopedTypeVariables         #-}
+{-# LANGUAGE TupleSections               #-}
 {-# OPTIONS_GHC -fno-warn-unused-do-bind #-}
 
 module Main where
@@ -30,17 +31,20 @@ magic :: Engine -> N (B Prop)
 magic _ = do
   clock <- deltaTime <$> getClock
   ctrl  <- keyboardController <$> getKeyboard
-  let evs = kpEvents ctrl
 
-  onEvent evs $ sync . putStrLn . show
-  b1 <- makeBaller 0 (mkV3 0 0 0) $ \cap -> do
+  b1 <- makeBaller 0 (mkV3 0 0 0) unitX $ \cap -> do
           dt    <- sample clock
           dx    <- sample $ _ctrlDir <$> ctrl
-          turbo <- fmap (bool 1 1.5) . sample $ _ctrlTurbo <$> ctrl
-
+          turbo <- fmap (bool 1 1.5)
+                 . sample
+                 $ _ctrlTurbo <$> ctrl
           let dpos = scaleRel (5 * turbo * dt) dx
-          return . flip moveCapsule cap
-                 $ rel3 (getX dpos) 0 (getY dpos)
+              dir  = rel3 (getX dpos) 0 (getY dpos)
+          return (moveCapsule dir cap, dir)
+
+  let evs = actionEvents ctrl b1
+  onEvent evs $ sync . putStrLn . show
+
   cam <- getCamera clock $ view (bCap.capPos) <$> b1
   let netDetector = detector NNetL (mkV3 3 0 0) 1 1
 
