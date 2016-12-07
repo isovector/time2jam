@@ -5,6 +5,7 @@
 module Main where
 
 import Data.Bool (bool)
+import Ball
 import Baller
 import Basket
 import Camera
@@ -42,22 +43,28 @@ magic _ = do
               dir  = rel3 (getX dpos) 0 (getY dpos)
           return (moveCapsule dir cap, dir)
 
+  ball <- makeBall $ mkV3 (-2) 1 0
+
   let evs = actionEvents ctrl b1
   onEvent evs $ sync . putStrLn . show
 
   cam <- getCamera clock $ view (bCap.capPos) <$> b1
   let netDetector = detector NNetL (mkV3 3 0 0) 1 1
 
-  bs <- manageCapsules $ pure netDetector : (fmap managed <$> [b1])
+  bs <- manageCapsules $ pure netDetector
+                       : fmap managed ball
+                       : (fmap managed <$> [b1])
 
   return $ do
     cam' <- sample cam
     ballers  <- sample $ sequenceA [b1]
     ballers' <- reconcile _capName bCap ballers <$> sample bs
+    ball' <- sample ball
 
     return $ group $ [ drawCourt court cam'
                      , drawBasket cam' unitX
                      , drawBasket cam' (-unitX)
+                     , drawBall cam' ball'
                      ]
                    ++ fmap (drawBaller cam') ballers'
 

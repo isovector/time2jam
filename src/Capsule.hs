@@ -62,7 +62,11 @@ stepPos as w = do
     cap = extract w
     loc = _capPos cap
     me  = pos w
-    forces = fmap (normalize . posDif loc . _capPos . snd) realInts
+    forces =
+      if not $ _capEphemeral cap
+         then fmap (normalize . posDif loc . _capPos . snd)
+                    realInts
+         else []
     ints = filter (checkCapsules cap . snd)
          . fmap (\s -> (s, flip peek w s))
          $ filter (/= me) as

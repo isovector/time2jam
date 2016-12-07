@@ -63,12 +63,11 @@ drawBaller cam b =
             , rel   width 0
             ]
         ]
-
   where
     pos = b ^. bCap . capPos
     size = depthMod cam pos
     width = 50 * size / 2
-    height = negate $ 100 * size
+    height = negate $ 135 * size
     shadowWidth = 80 * size
     shadowHeight = 30 * size
 

@@ -39,7 +39,7 @@ toScreen cam@(Camera {..}) world = mkPos x y
     dmod = depthMod cam world
     x = getX local * _camWidthMult * dmod
     y = getZ local * _camDepthMult
-      + getY local * heightScaling * dmod
+      - getY local * heightScaling * dmod
 
 depthMod :: Camera -> V3 -> Double
 depthMod cam world = 1 / ((getZ (_camPos cam) - getZ world) / courtDepth + 1.5)

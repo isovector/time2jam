@@ -25,10 +25,10 @@ type Prop = Prop' ()
 
 
 unpackV3 :: V3 -> (Double, Double, Double)
-unpackV3 (Point3 pos) = pos
+unpackV3 (Point3 x y z) = (x, y, z)
 
 mkV3 :: Double -> Double -> Double -> V3
-mkV3 x y z = Point3 (x, y, z)
+mkV3 = Point3
 
 rel3 :: Double -> Double -> Double -> Rel3
 rel3 x y z = makeRel3 (x, y, z)
@@ -58,5 +58,6 @@ data Name
   = NBaller Int
   | NNetL
   | NNetR
+  | NBall
   deriving (Eq, Ord, Show)
 

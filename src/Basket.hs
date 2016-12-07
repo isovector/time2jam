@@ -23,9 +23,9 @@ drawBasket cam fwd =
     netWidth = 40
     netHeight = 20
     bPos = plusDir (mkV3 0 0 0) $ scaleRel (courtLength / 2) (-fwd)
-                                + scaleRel courtBasketHeight (-unitY)
+                                + scaleRel courtBasketHeight unitY
     netPos = plusDir ( plusDir bPos
-                     $ scaleRel (courtBoardHeight / 2) unitY)
+                     $ scaleRel (courtBoardHeight / 2) (-unitY))
            $ scaleRel 0.5 fwd
 
 billboard :: Camera
