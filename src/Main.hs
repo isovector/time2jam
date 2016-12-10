@@ -1,3 +1,4 @@
+{-# LANGUAGE RecursiveDo                 #-}
 {-# LANGUAGE ScopedTypeVariables         #-}
 {-# LANGUAGE TupleSections               #-}
 {-# OPTIONS_GHC -fno-warn-unused-do-bind #-}
@@ -15,9 +16,9 @@ import Court
 import Data.Default
 import Game.Sequoia
 import Game.Sequoia.Keyboard
+import Control.FRPNow.EvStream
 import Input
 import Types
-import Objects
 
 getCamera :: B Time -> B V3 -> N (B Camera)
 getCamera clock pos =
@@ -27,6 +28,8 @@ getCamera clock pos =
     return . updateCam dt
            $ cam & camFocus .~ focus
 
+delaying :: B Time -> a -> B a -> B (B a)
+delaying time a b = delay (toChanges time) a b
 
 magic :: Engine -> N (B Prop)
 magic _ = do
@@ -43,22 +46,30 @@ magic _ = do
               dir  = rel3 (getX dpos) 0 (getY dpos)
           return (moveCapsule dir cap, dir)
 
-  ball <- makeBall $ mkV3 (-2) 1 0
+  rec
+    delayedBallers <- sample $ delaying clock [] ballers
+    ball <-
+      makeBall (mkV3 (-2) 1 0) $ \b -> do
+        bs <- sample delayedBallers
+        return $ case _ballOwner b of
+                   Just owner -> b & ballCap . capPos .~
+                                     view (bCap . capPos) owner
+                   Nothing -> b
 
-  let evs = actionEvents ctrl b1
-  onEvent evs $ sync . putStrLn . show
+    let evs = actionEvents ctrl b1
+    onEvent evs $ sync . putStrLn . show
 
-  cam <- getCamera clock $ view (bCap.capPos) <$> b1
-  let netDetector = detector NNetL (mkV3 3 0 0) 1 1
+    cam <- getCamera clock $ view (bCap.capPos) <$> b1
 
-  bs <- manageCapsules $ pure netDetector
-                       : fmap managed ball
-                       : (fmap managed <$> [b1])
+    let unmanagedBallers = [b1]
+    caps <- manageCapsules $ fmap managed ball
+                          : (fmap managed <$> [b1])
+    let ballers = reconcile _capName bCap <$> sequenceA unmanagedBallers
+                                          <*> caps
 
   return $ do
     cam' <- sample cam
-    ballers  <- sample $ sequenceA [b1]
-    ballers' <- reconcile _capName bCap ballers <$> sample bs
+    ballers' <- sample ballers
     ball' <- sample ball
 
     return $ group $ [ drawCourt court cam'

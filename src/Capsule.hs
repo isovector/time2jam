@@ -130,18 +130,37 @@ reconcile proj lx as cs =
 
 manageCapsules :: [B ( Capsule
                      , (Capsule -> Capsule) -> IO ()
+                     , Capsule -> IO ()
                      )]
                -> N (B [Capsule])
-manageCapsules = manage $ \caps -> do
-  let (caps', hits) = resolveCapsules $ zip (fmap _capName caps) caps
-  when (not $ null hits) $ sync $ putStrLn $ show hits
-  return $ fmap snd caps'
+manageCapsules cs = do
+  onHits <- fmap (\x -> (view (_1  .capName) x, view _3 x))
+              <$> sample (sequence cs)
+  let managedCaps = (fmap . fmap) (\x -> (view _1 x, view _2 x)) cs
+
+  flip manage managedCaps $ \caps -> do
+    let (caps', hits) = resolveCapsules $ zip (fmap _capName caps) caps
+    when (not $ null hits) $ sync $ forM_ hits $ \(a, b) -> do
+      let Just af = lookup a onHits
+          Just bf = lookup b onHits
+          Just ac = lookup a caps'
+          Just bc = lookup b caps'
+      af bc
+      bf ac
+
+    return $ fmap snd caps'
 
 class Managed t where
   managedCapsule :: t -> Capsule
   managedInput   :: t -> (Capsule -> Capsule) -> IO ()
+  managedOnHit   :: t -> Capsule -> IO ()
 
-managed :: Managed t => t -> (Capsule, (Capsule -> Capsule) -> IO ())
-managed t = (managedCapsule t, managedInput t)
+managed :: Managed t
+        => t
+        -> ( Capsule
+           , (Capsule -> Capsule) -> IO ()
+           , Capsule -> IO ()
+           )
+managed t = (managedCapsule t, managedInput t, managedOnHit t)
 
 

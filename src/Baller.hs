@@ -48,6 +48,7 @@ makeBaller n p fwd f = do
 instance Managed Baller where
   managedCapsule = view bCap
   managedInput = view bInput
+  managedOnHit _ = const $ return ()
 
 drawBaller :: Camera -> Baller -> Prop
 drawBaller cam b =

@@ -2,6 +2,7 @@
 
 module Ball where
 
+import Baller
 import Control.Lens
 import Camera
 import Capsule
@@ -19,10 +20,19 @@ data BallState = BSDefault
 data Ball = Ball
   { _ballCap   :: Capsule
   -- TODO(sandy): make this a ball
-  , _ballInput :: (Capsule -> Capsule) -> IO ()
+  , _ballInput :: (Ball -> Ball) -> IO ()
   , _ballState :: BallState
+  , _ballOwner :: Maybe Baller
   }
 makeLenses ''Ball
+
+defaultBall :: Ball
+defaultBall = Ball
+  { _ballCap = ballCapsule
+  , _ballInput = const $ return ()
+  , _ballState = BSDefault
+  , _ballOwner = Nothing
+  }
 
 ballCapsule :: Capsule
 ballCapsule = Capsule
@@ -33,10 +43,12 @@ ballCapsule = Capsule
   , _capEphemeral = True
   }
 
-makeBall :: V3 -> N (B Ball)
-makeBall p = do
-  (cap, input) <- foldmp (ballCapsule & capPos .~ p) return
-  return $ Ball <$> cap <*> pure input <*> pure BSDefault
+makeBall :: V3 -> (Ball -> N Ball) -> N (B Ball)
+makeBall p f = do
+  (ball, input) <-
+    foldmp (defaultBall & ballCap . capPos .~ p) f
+  sync $ input (ballInput .~ input)
+  return ball
 
 orange :: Color
 orange = rgb 0.98 0.51 0.13
@@ -58,5 +70,6 @@ drawBall cam ball =
 
 instance Managed Ball where
   managedCapsule = view ballCap
-  managedInput = view ballInput
+  managedInput x = view ballInput x . over ballCap
+  managedOnHit = undefined
 
