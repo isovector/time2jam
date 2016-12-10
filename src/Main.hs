@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase                  #-}
 {-# LANGUAGE RecursiveDo                 #-}
 {-# LANGUAGE ScopedTypeVariables         #-}
 {-# LANGUAGE TupleSections               #-}
@@ -16,6 +17,7 @@ import Court
 import Data.Default
 import Game.Sequoia
 import Game.Sequoia.Keyboard
+import Data.Maybe (listToMaybe)
 import Control.FRPNow.EvStream
 import Input
 import Types
@@ -47,14 +49,21 @@ magic _ = do
           return (moveCapsule dir cap, dir)
 
   rec
-    delayedBallers <- sample $ delaying clock [] ballers
     ball <-
       makeBall (mkV3 (-2) 1 0) $ \b -> do
-        bs <- sample delayedBallers
         return $ case _ballOwner b of
                    Just owner -> b & ballCap . capPos .~
                                      view (bCap . capPos) owner
                    Nothing -> b
+    onEvent (next $ filterEs ((== NBall) . fst) hits)
+      $ \(NBall, bname) -> do
+
+        b <- sample ball
+        bs <- sample ballers
+        case listToMaybe $ filter ((== bname) . view (bCap.capName)) bs of
+          Just balla -> sync $ view ballInput b $ ballOwner .~ Just balla
+          Nothing    -> return ()
+
 
     let evs = actionEvents ctrl b1
     onEvent evs $ sync . putStrLn . show
@@ -62,8 +71,9 @@ magic _ = do
     cam <- getCamera clock $ view (bCap.capPos) <$> b1
 
     let unmanagedBallers = [b1]
-    caps <- manageCapsules $ fmap managed ball
-                          : (fmap managed <$> [b1])
+    (caps, hits) <- manageCapsules
+                  $ fmap managed ball
+                    : (fmap managed <$> [b1])
     let ballers = reconcile _capName bCap <$> sequenceA unmanagedBallers
                                           <*> caps
 

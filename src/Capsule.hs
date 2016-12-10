@@ -7,6 +7,7 @@ module Capsule where
 import           Control.Arrow (second)
 import           Control.Comonad
 import           Control.Comonad.Store
+import           Control.FRPNow.EvStream
 import           Control.Lens
 import           Control.Monad.Writer
 import           Data.List (nub)
@@ -130,25 +131,15 @@ reconcile proj lx as cs =
 
 manageCapsules :: [B ( Capsule
                      , (Capsule -> Capsule) -> IO ()
-                     , Capsule -> IO ()
                      )]
-               -> N (B [Capsule])
+               -> N (B [Capsule], EvStream (Name, Name))
 manageCapsules cs = do
-  onHits <- fmap (\x -> (view (_1  .capName) x, view _3 x))
-              <$> sample (sequence cs)
-  let managedCaps = (fmap . fmap) (\x -> (view _1 x, view _2 x)) cs
-
-  flip manage managedCaps $ \caps -> do
+  (es, mb) <- callbackStream
+  cs' <- flip manage cs $ \caps -> do
     let (caps', hits) = resolveCapsules $ zip (fmap _capName caps) caps
-    when (not $ null hits) $ sync $ forM_ hits $ \(a, b) -> do
-      let Just af = lookup a onHits
-          Just bf = lookup b onHits
-          Just ac = lookup a caps'
-          Just bc = lookup b caps'
-      af bc
-      bf ac
-
+    sync . forM_ hits $ \(a, b) -> mb (a, b) >> mb (b, a)
     return $ fmap snd caps'
+  return (cs', es)
 
 class Managed t where
   managedCapsule :: t -> Capsule
@@ -159,8 +150,7 @@ managed :: Managed t
         => t
         -> ( Capsule
            , (Capsule -> Capsule) -> IO ()
-           , Capsule -> IO ()
            )
-managed t = (managedCapsule t, managedInput t, managedOnHit t)
+managed t = (managedCapsule t, managedInput t)
 
 
