@@ -119,8 +119,8 @@ moveTo :: Time -> [V3] -> Capsule -> Capsule
 moveTo duration v3s c = c & capMotion .~ Just motion'
   where
     motion' = Motion
-      { _mProgress = 0
-      , _mPath = bezier $ _capPos c : v3s
+      { _mProgress  = 0
+      , _mPath      = bezier $ _capPos c : v3s
       , _mSpeedMult = 1 / duration
       }
 
