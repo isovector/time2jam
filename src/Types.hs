@@ -1,4 +1,3 @@
-{-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE TemplateHaskell           #-}
 
 module Types where
@@ -47,13 +46,6 @@ unitY = rel3 0 1 0
 unitZ :: Rel3
 unitZ = rel3 0 0 1
 
-data Name
-  = NBaller Int
-  | NNetL
-  | NNetR
-  | NBall
-  deriving (Eq, Ord, Show)
-
 data Keypress = ShootKP
               | PassKP
               deriving (Show, Eq, Ord)
@@ -66,11 +58,10 @@ data Action = Jump
             deriving (Show, Eq, Ord)
 
 data Capsule = Capsule
-  { _capName      :: Name
-  , _capPos       :: V3
-  , _capRadius    :: Double
-  , _capHeight    :: Double
-  , _capEphemeral :: Bool
+  { _capPos      :: V3
+  , _capRadius   :: Double
+  , _capHeight   :: Double
+  , _capEthereal :: Bool
   } deriving (Eq, Show)
 makeLenses ''Capsule
 
@@ -79,20 +70,38 @@ data Baller = Baller
   , _bColor :: Color
   , _bFwd   :: Rel3  -- ^ Direction toward the baller's net.
   , _bDir   :: Rel3
-  }
+  } deriving (Eq, Show)
 makeLenses ''Baller
 
 data BallState = BSDefault
                | BSShoot
                | BSRebound
                | BSPassed
+               deriving (Eq, Show, Ord, Bounded)
 
 data Ball = Ball
   { _ballCap   :: Capsule
-  -- TODO(sandy): make this a ball
-  , _ballInput :: (Ball -> Ball) -> IO ()
   , _ballState :: BallState
   , _ballOwner :: Maybe Baller
-  }
+  } deriving (Eq, Show)
 makeLenses ''Ball
+
+data GObject = BallObj Ball
+             | BallerObj Int Baller
+             deriving Eq
+makePrisms ''GObject
+
+instance Ord GObject where
+  compare (BallObj _)     (BallObj _)     = EQ
+  compare (BallObj _)     (BallerObj _ _) = LT
+  compare (BallerObj _ _) (BallObj _)     = GT
+  compare (BallerObj i _) (BallerObj j _) = compare i j
+
+objCap :: Lens' GObject Capsule
+objCap = lens getter setter
+  where
+    getter (BallObj b)     = view ballCap b
+    getter (BallerObj _ b) = view bCap    b
+    setter (BallObj b) c     = BallObj $     b & ballCap .~ c
+    setter (BallerObj i b) c = BallerObj i $ b &    bCap .~ c
 

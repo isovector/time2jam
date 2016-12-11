@@ -52,14 +52,14 @@ stepPos as w = do
     loc = _capPos cap
     me  = pos w
     forces =
-      if not $ _capEphemeral cap
+      if not $ _capEthereal cap
          then fmap (normalize . posDif loc . _capPos . snd)
                     realInts
          else []
     ints = filter (checkCapsules cap . snd)
          . fmap (\s -> (s, flip peek w s))
          $ filter (/= me) as
-    realInts = filter (not . _capEphemeral . snd) ints
+    realInts = filter (not . _capEthereal . snd) ints
     ids = fmap (\s -> (min s me, max s me)) $ fmap fst ints
     mult = ((1 / 10) *)
          . minimum
