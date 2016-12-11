@@ -17,15 +17,6 @@ import           Game.Sequoia.Signal
 import           Game.Sequoia.Types
 import           Types
 
-data Capsule = Capsule
-  { _capName      :: Name
-  , _capPos       :: V3
-  , _capRadius    :: Double
-  , _capHeight    :: Double
-  , _capEphemeral :: Bool
-  } deriving (Eq, Show)
-makeLenses ''Capsule
-
 moveCapsule :: Rel3 -> Capsule -> Capsule
 moveCapsule r3 = capPos %~ flip plusDir r3
 
@@ -145,12 +136,5 @@ class Managed t where
   managedCapsule :: t -> Capsule
   managedInput   :: t -> (Capsule -> Capsule) -> IO ()
   managedOnHit   :: t -> Capsule -> IO ()
-
-managed :: Managed t
-        => t
-        -> ( Capsule
-           , (Capsule -> Capsule) -> IO ()
-           )
-managed t = (managedCapsule t, managedInput t)
 
 

@@ -1,23 +1,16 @@
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Baller where
 
-import Control.Arrow (first)
+import Data.Bool (bool)
+import Input
 import Camera
 import Control.Lens
 import Capsule
 import Game.Sequoia.Color
 import Game.Sequoia
 import Types
-
-data Baller = Baller
-  { _bCap   :: Capsule
-  , _bInput :: (Capsule -> Capsule) -> IO ()
-  , _bColor :: Color
-  , _bFwd   :: Rel3  -- ^ Direction toward the baller's net.
-  , _bDir   :: Rel3
-  }
-makeLenses ''Baller
 
 ballerCapsule :: Int -> Capsule
 ballerCapsule n = Capsule
@@ -28,6 +21,13 @@ ballerCapsule n = Capsule
   , _capEphemeral = False
   }
 
+updateBaller :: Time -> Controller -> Baller -> Baller
+updateBaller dt ctrl b@Baller{..} =
+    b { _bCap = moveCapsule dir _bCap }
+  where
+    speed = bool 1 1.5 $ _ctrlTurbo ctrl
+    dx = scaleRel (5 * speed * dt) $ _ctrlDir ctrl
+    dir  = rel3 (getX dx) 0 (getY dx)
 
 makeBaller :: Int
            -> V3
@@ -35,20 +35,14 @@ makeBaller :: Int
            -> (Capsule -> N (Capsule, Rel3))
            -> N (B Baller)
 makeBaller n p fwd f = do
-  (cap'dir, input) <- foldmp (ballerCapsule n & capPos .~ p, fwd)
+  (cap'dir, _) <- foldmp (ballerCapsule n & capPos .~ p, fwd)
                            $ f . fst
   let cap = fmap fst cap'dir
       dir = fmap snd cap'dir
   return $ Baller <$> cap
-                  <*> pure (input . first)
                   <*> pure (rgb 0.67 0 0.47)
                   <*> pure fwd
                   <*> dir
-
-instance Managed Baller where
-  managedCapsule = view bCap
-  managedInput = view bInput
-  managedOnHit _ = const $ return ()
 
 drawBaller :: Camera -> Baller -> Prop
 drawBaller cam b =

@@ -1,21 +1,11 @@
-module Types
-  ( getZ
-  , V3
-  , unpackV3
-  , Rel3
-  , mkV3
-  , rel3
-  , Prop
-  , toPoly
-  , ellipse
-  , unitX
-  , unitY
-  , unitZ
-  , Name (..)
-  ) where
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE TemplateHaskell           #-}
 
+module Types where
+
+import Control.Lens
 import Data.SG.Geometry.ThreeDim
-import Data.SG.Vector
+import Data.SG.Vector as V
 import Game.Sequoia.Scene
 import Game.Sequoia.Types
 
@@ -45,6 +35,9 @@ ellipse p w h = polygon p
     rad2rel :: Double -> Rel
     rad2rel rad = rel (cos rad * w / 2) (sin rad * h / 2)
 
+getZ :: Coord3 p => p a -> a
+getZ = V.getZ
+
 unitX :: Rel3
 unitX = rel3 1 0 0
 
@@ -60,4 +53,46 @@ data Name
   | NNetR
   | NBall
   deriving (Eq, Ord, Show)
+
+data Keypress = ShootKP
+              | PassKP
+              deriving (Show, Eq, Ord)
+
+data Action = Jump
+            | Shoot
+            | Pass
+            | Shove
+            | Dunk
+            deriving (Show, Eq, Ord)
+
+data Capsule = Capsule
+  { _capName      :: Name
+  , _capPos       :: V3
+  , _capRadius    :: Double
+  , _capHeight    :: Double
+  , _capEphemeral :: Bool
+  } deriving (Eq, Show)
+makeLenses ''Capsule
+
+data Baller = Baller
+  { _bCap   :: Capsule
+  , _bColor :: Color
+  , _bFwd   :: Rel3  -- ^ Direction toward the baller's net.
+  , _bDir   :: Rel3
+  }
+makeLenses ''Baller
+
+data BallState = BSDefault
+               | BSShoot
+               | BSRebound
+               | BSPassed
+
+data Ball = Ball
+  { _ballCap   :: Capsule
+  -- TODO(sandy): make this a ball
+  , _ballInput :: (Ball -> Ball) -> IO ()
+  , _ballState :: BallState
+  , _ballOwner :: Maybe Baller
+  }
+makeLenses ''Ball
 

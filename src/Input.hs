@@ -3,22 +3,11 @@
 module Input where
 
 import Data.Bool (bool)
-import Baller
 import Control.Monad (liftM2)
 import Game.Sequoia
 import Game.Sequoia.Keyboard
 import Control.FRPNow.EvStream
-
-data Keypress = ShootKP
-              | PassKP
-              deriving (Show, Eq, Ord)
-
-data Action = Jump
-            | Shoot
-            | Pass
-            | Shove
-            | Dunk
-            deriving (Show, Eq, Ord)
+import Types
 
 data Controller = Controller
   { _ctrlDir   :: Rel

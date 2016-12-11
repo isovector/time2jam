@@ -11,21 +11,6 @@ import Game.Sequoia.Color
 import Data.SG.Geometry.ThreeDim
 import Types
 
-
-data BallState = BSDefault
-               | BSShoot
-               | BSRebound
-               | BSPassed
-
-data Ball = Ball
-  { _ballCap   :: Capsule
-  -- TODO(sandy): make this a ball
-  , _ballInput :: (Ball -> Ball) -> IO ()
-  , _ballState :: BallState
-  , _ballOwner :: Maybe Baller
-  }
-makeLenses ''Ball
-
 defaultBall :: Ball
 defaultBall = Ball
   { _ballCap = ballCapsule
@@ -42,6 +27,9 @@ ballCapsule = Capsule
   , _capHeight    = 0.2
   , _capEphemeral = True
   }
+
+updateBall :: Ball -> Ball
+updateBall = id
 
 makeBall :: V3 -> (Ball -> N Ball) -> N (B Ball)
 makeBall p f = do
