@@ -14,18 +14,16 @@ import Types
 defaultBall :: Ball
 defaultBall = Ball
   { _ballCap = ballCapsule
-  , _ballInput = const $ return ()
   , _ballState = BSDefault
   , _ballOwner = Nothing
   }
 
 ballCapsule :: Capsule
 ballCapsule = Capsule
-  { _capName      = NBall
-  , _capPos       = mkV3 0 0 0
-  , _capRadius    = 0.2
-  , _capHeight    = 0.2
-  , _capEphemeral = True
+  { _capPos      = mkV3 0 0 0
+  , _capRadius   = 0.2
+  , _capHeight   = 0.2
+  , _capEthereal = True
   }
 
 updateBall :: Ball -> Ball
@@ -35,7 +33,7 @@ makeBall :: V3 -> (Ball -> N Ball) -> N (B Ball)
 makeBall p f = do
   (ball, input) <-
     foldmp (defaultBall & ballCap . capPos .~ p) f
-  sync $ input (ballInput .~ input)
+  -- sync $ input (ballInput .~ input)
   return ball
 
 orange :: Color
@@ -56,8 +54,8 @@ drawBall cam ball =
     shadowPos    = yPos .~ 0 $ pos
     shadowRadius = 10 * depthMod cam pos
 
-instance Managed Ball where
-  managedCapsule = view ballCap
-  managedInput x = view ballInput x . over ballCap
-  managedOnHit = undefined
+-- instance Managed Ball where
+--   managedCapsule = view ballCap
+--   managedInput x = view ballInput x . over ballCap
+--   managedOnHit = undefined
 

@@ -1,4 +1,5 @@
 {-# LANGUAGE LambdaCase                  #-}
+{-# LANGUAGE RecordWildCards             #-}
 {-# LANGUAGE RecursiveDo                 #-}
 {-# LANGUAGE ScopedTypeVariables         #-}
 {-# LANGUAGE TupleSections               #-}
@@ -6,7 +7,6 @@
 
 module Main where
 
-import Data.Bool (bool)
 import Ball
 import Baller
 import Basket
@@ -17,77 +17,58 @@ import Court
 import Data.Default
 import Game.Sequoia
 import Game.Sequoia.Keyboard
-import Data.Maybe (listToMaybe)
-import Control.FRPNow.EvStream
 import Input
 import Types
 
-getCamera :: B Time -> B V3 -> N (B Camera)
-getCamera clock pos =
-  fmap fst . foldmp def $ \cam -> do
-    dt    <- sample clock
-    focus <- sample pos
-    return . updateCam dt
-           $ cam & camFocus .~ focus
+data Game = Game
+  { _gCamera  :: Camera
+  , _gBall    :: Ball
+  , _gBaller1 :: Baller
+  }
 
-delaying :: B Time -> a -> B a -> B (B a)
-delaying time a b = delay (toChanges time) a b
+initGame :: Game
+initGame = Game
+  { _gCamera  = def
+  , _gBall    = defaultBall
+  , _gBaller1 = defaultBaller
+  }
+
+updateGame :: Time -> Controller -> Game -> Game
+updateGame dt ctrl Game{..} =
+  let baller1 = updateBaller dt ctrl _gBaller1
+      ball    = updateBall _gBall
+      ([ BallObj ball'
+       , BallerObj _ baller1'
+       ]
+       , hits) = resolveCapsules objCap
+                  [ BallObj ball
+                  , BallerObj 1 baller1
+                  ]
+      camera' = updateCam dt $ _gCamera
+                             & camFocus .~ view (ballCap . capPos) ball'
+   in Game camera' ball' baller1'
 
 magic :: Engine -> N (B Prop)
 magic _ = do
-  clock <- deltaTime <$> getClock
-  ctrl  <- keyboardController <$> getKeyboard
+  clock      <- deltaTime          <$> getClock
+  controller <- keyboardController <$> getKeyboard
 
-  b1 <- makeBaller 0 (mkV3 0 0 0) unitX $ \cap -> do
-          dt    <- sample clock
-          dx    <- sample $ _ctrlDir <$> ctrl
-          turbo <- fmap (bool 1 1.5)
-                 . sample
-                 $ _ctrlTurbo <$> ctrl
-          let dpos = scaleRel (5 * turbo * dt) dx
-              dir  = rel3 (getX dpos) 0 (getY dpos)
-          return (moveCapsule dir cap, dir)
-
-  rec
-    ball <-
-      makeBall (mkV3 (-2) 1 0) $ \b -> do
-        return $ case _ballOwner b of
-                   Just owner -> b & ballCap . capPos .~
-                                     view (bCap . capPos) owner
-                   Nothing -> b
-    onEvent (next $ filterEs ((== NBall) . fst) hits)
-      $ \(NBall, bname) -> do
-
-        b <- sample ball
-        bs <- sample ballers
-        case listToMaybe $ filter ((== bname) . view (bCap.capName)) bs of
-          Just balla -> sync $ view ballInput b $ ballOwner .~ Just balla
-          Nothing    -> return ()
-
-
-    let evs = actionEvents ctrl b1
-    onEvent evs $ sync . putStrLn . show
-
-    cam <- getCamera clock $ view (bCap.capPos) <$> b1
-
-    let unmanagedBallers = [b1]
-    (caps, hits) <- manageCapsules
-                  $ fmap managed ball
-                    : (fmap managed <$> [b1])
-    let ballers = reconcile _capName bCap <$> sequenceA unmanagedBallers
-                                          <*> caps
+  (game, _) <-
+    foldmp initGame $ \g -> do
+      dt   <- sample clock
+      ctrl <- sample controller
+      return $ updateGame dt ctrl g
 
   return $ do
-    cam' <- sample cam
-    ballers' <- sample ballers
-    ball' <- sample ball
+    Game {..} <- sample game
+    let cam = _gCamera
 
-    return $ group $ [ drawCourt court cam'
-                     , drawBasket cam' unitX
-                     , drawBasket cam' (-unitX)
-                     , drawBall cam' ball'
+    return $ group $ [ drawCourt court cam
+                     , drawBasket cam unitX
+                     , drawBasket cam (-unitX)
+                     , drawBall cam _gBall
+                     , drawBaller cam _gBaller1
                      ]
-                   ++ fmap (drawBaller cam') ballers'
 
 
 main :: IO ()
