@@ -83,7 +83,7 @@ data BallState = BSDefault
 data Ball = Ball
   { _ballCap   :: Capsule
   , _ballState :: BallState
-  , _ballOwner :: Maybe Baller
+  , _ballOwner :: Maybe Int
   } deriving (Eq, Show)
 makeLenses ''Ball
 

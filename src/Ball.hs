@@ -24,12 +24,15 @@ ballCapsule = Capsule
   , _capEthereal = True
   }
 
-updateBall :: Time -> Maybe Baller -> Ball -> Ball
-updateBall _ hit b@Ball{..} =
+updateBall :: Time -> Maybe Int -> [Baller] ->  Ball -> Ball
+updateBall _ hit ballers b@Ball{..} =
     b & ballCap.capPos .~ (pos' & yPos .~ 1)
+      & ballOwner      .~ owner'
   where
     owner' = _ballOwner <|> hit
-    pos' = maybe (view (ballCap.capPos) b) (view $ bCap.capPos) $ owner'
+    pos' = maybe (view (ballCap.capPos) b)
+                 (view (bCap.capPos) . (ballers !!))
+                 owner'
 
 orange :: Color
 orange = rgb 0.98 0.51 0.13

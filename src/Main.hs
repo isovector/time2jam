@@ -27,14 +27,14 @@ import Data.Maybe (listToMaybe)
 data Game = Game
   { _gCamera  :: Camera
   , _gBall    :: Ball
-  , _gBaller1 :: Baller
+  , _gBaller0 :: Baller
   }
 
 initGame :: Game
 initGame = Game
   { _gCamera  = def
   , _gBall    = defaultBall
-  , _gBaller1 = defaultBaller
+  , _gBaller0 = defaultBaller
   }
 
 duplicate :: [(a, a)] -> [(a, a)]
@@ -42,13 +42,13 @@ duplicate as = join $ as >>= \p -> return [p , swap p]
 
 updateGame :: Time -> Controller -> Game -> Game
 updateGame dt ctrl Game{..} =
-  let baller1 = updateBaller dt ctrl _gBaller1
+  let baller0 = updateBaller dt ctrl _gBaller0
       ([ BallObj ball
-       , BallerObj _ baller1'
+       , BallerObj _ baller0'
        ]
        , hits) = resolveCapsules objCap
                   [ BallObj _gBall
-                  , BallerObj 1 baller1
+                  , BallerObj 0 baller0
                   ]
       camera' = updateCam dt
               $ _gCamera
@@ -56,9 +56,10 @@ updateGame dt ctrl Game{..} =
       allHits  = duplicate hits
       ballHits = fmap snd $ filter (isBall . fst) allHits
       ball'    = updateBall dt
-                            (fmap snd . preview _BallerObj =<< listToMaybe ballHits)
+                            (fmap fst . preview _BallerObj =<< listToMaybe ballHits)
+                            [baller0']
                             ball
-   in Game camera' ball' baller1'
+   in Game camera' ball' baller0'
 
 magic :: Engine -> N (B Prop)
 magic _ = do
@@ -79,7 +80,7 @@ magic _ = do
                      , drawBasket cam unitX
                      , drawBasket cam (-unitX)
                      , drawBall cam _gBall
-                     , drawBaller cam _gBaller1
+                     , drawBaller cam _gBaller0
                      ]
 
 
