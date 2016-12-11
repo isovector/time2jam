@@ -1,18 +1,21 @@
 {-# LANGUAGE RankNTypes      #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TupleSections   #-}
 
 module Capsule where
 
-import           Control.Arrow (second)
-import           Control.Comonad
-import           Control.Comonad.Store
-import           Control.Lens
-import           Control.Monad.Writer
-import           Data.List (nub)
-import           Data.Maybe (isJust)
-import           Game.Sequoia.Types
-import           Types
+import Bezier
+import Control.Arrow (second)
+import Control.Comonad
+import Control.Comonad.Store
+import Control.Lens
+import Control.Monad.Writer
+import Data.Bool (bool)
+import Data.List (nub)
+import Data.Maybe (isJust)
+import Game.Sequoia
+import Types
 
 moveCapsule :: Rel3 -> Capsule -> Capsule
 moveCapsule r3 = capPos %~ flip plusDir r3
@@ -51,8 +54,9 @@ stepPos as w = do
     cap = extract w
     loc = _capPos cap
     me  = pos w
+    isMovable = not $ _capEthereal cap || isJust (_capMotion cap)
     forces =
-      if not $ _capEthereal cap
+      if isMovable
          then fmap (normalize . posDif loc . _capPos . snd)
                     realInts
          else []
@@ -95,4 +99,28 @@ findFixedPoint f a = go a (f a)
       if b == b'
          then return b
          else go b' (f b')
+
+updateCapsule :: Time -> Capsule -> Capsule
+updateCapsule dt c@Capsule{..}
+  | Just m <- _capMotion =
+      let progress' = _mProgress m + _mSpeedMult m * dt
+          continue  = progress' <= 1
+          motion' = case continue of
+                      True  -> Just $ m { _mProgress = progress' }
+                      False -> Nothing
+          pos' = _mPath m $ bool 1 progress' continue
+
+       in c { _capMotion = motion'
+            , _capPos    = pos'
+            }
+  | otherwise = c
+
+moveTo :: Time -> [V3] -> Capsule -> Capsule
+moveTo duration v3s c = c & capMotion .~ Just motion'
+  where
+    motion' = Motion
+      { _mProgress = 0
+      , _mPath = bezier $ _capPos c : v3s
+      , _mSpeedMult = 1 / duration
+      }
 

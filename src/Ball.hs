@@ -22,16 +22,17 @@ ballCapsule = Capsule
   , _capRadius   = 0.2
   , _capHeight   = 0.2
   , _capEthereal = True
+  , _capMotion   = Nothing
   }
 
 updateBall :: Time -> Maybe Int -> [Baller] ->  Ball -> Ball
 updateBall _ hit ballers b@Ball{..} =
-    b & ballCap.capPos .~ (pos' & yPos .~ 1)
+    b & ballCap.capPos .~ pos'
       & ballOwner      .~ owner'
   where
     owner' = _ballOwner <|> hit
     pos' = maybe (view (ballCap.capPos) b)
-                 (view (bCap.capPos) . (ballers !!))
+                 ((flip plusDir unitY) . view (bCap.capPos) . (ballers !!))
                  owner'
 
 orange :: Color

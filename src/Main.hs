@@ -12,18 +12,17 @@ import Baller
 import Basket
 import Camera
 import Capsule
+import Control.FRPNow.Time (delayTime)
 import Control.Lens
+import Control.Monad (join)
 import Court
 import Data.Default
+import Data.Maybe (listToMaybe)
+import Data.Tuple (swap)
 import Game.Sequoia
 import Game.Sequoia.Keyboard
-import Control.FRPNow.Time (delayTime)
-import Game.Sequoia.Utils
 import Input
 import Types
-import Data.Tuple (swap)
-import Control.Monad (join)
-import Data.Maybe (listToMaybe)
 
 data Game = Game
   { _gCamera  :: Camera
@@ -46,11 +45,11 @@ updateGame dt ctrl kp Game{..} =
   let baller0 = updateBaller dt ctrl kp _gBaller0
       ([ BallObj ball
        , BallerObj _ baller0'
-       ]
-       , hits) = resolveCapsules objCap
-                  [ BallObj _gBall
-                  , BallerObj 0 baller0
-                  ]
+       ], hits
+       ) = resolveCapsules objCap
+             [ BallObj _gBall
+             , BallerObj 0 baller0
+             ]
       camera' = updateCam dt
               $ _gCamera
               & camFocus .~ view (ballCap . capPos) ball'

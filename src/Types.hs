@@ -58,11 +58,24 @@ data Action = Jump
             | Dunk
             deriving (Show, Eq, Ord)
 
+data Motion = Motion
+  { _mPath      :: Double -> V3
+  , _mProgress  :: Double
+  , _mSpeedMult :: Double
+  }
+
+instance Eq Motion where
+  _ == _ = True
+
+instance Show Motion where
+  show _ = "Motion"
+
 data Capsule = Capsule
   { _capPos      :: V3
   , _capRadius   :: Double
   , _capHeight   :: Double
   , _capEthereal :: Bool
+  , _capMotion   :: Maybe Motion
   } deriving (Eq, Show)
 makeLenses ''Capsule
 

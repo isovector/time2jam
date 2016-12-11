@@ -19,6 +19,7 @@ ballerCapsule = Capsule
   , _capRadius   = 0.75
   , _capHeight   = 2
   , _capEthereal = False
+  , _capMotion   = Nothing
   }
 
 defaultBaller :: Baller
@@ -35,16 +36,23 @@ updateBaller :: Time
              -> Baller
              -> Baller
 updateBaller dt ctrl kp b@Baller{..} =
-    b { _bCap = moveCapsule dir _bCap
+    b { _bCap = updateCapsule dt . motion' $ moveCapsule dir _bCap
       , _bDir = dir
       }
   where
     speed = bool 1 1.5 $ _ctrlTurbo ctrl
     dx = scaleRel (5 * speed * dt) $ _ctrlDir ctrl
-    dir  = rel3 (getX dx) height (getY dx)
-    height = case kp of
-               Just ShootKP -> 3
-               _ -> 0
+    dir  = rel3 (getX dx) 0 (getY dx)
+    motion' =
+        case kp of
+          Just ShootKP -> jump 1.5
+          _            -> id
+
+jump :: Double -> Capsule -> Capsule
+jump jumpHeight c@Capsule{..} =
+  moveTo 1 [ plusDir _capPos $ scaleRel (2 * jumpHeight) unitY
+           , _capPos
+           ] c
 
 drawBaller :: Camera -> Baller -> Prop
 drawBaller cam b =
