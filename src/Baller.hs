@@ -4,6 +4,7 @@
 module Baller where
 
 import Data.Bool (bool)
+import Data.Maybe (isJust)
 import Input
 import Camera
 import Control.Lens
@@ -47,7 +48,9 @@ updateBaller dt ctrl kp b@Baller{..} =
     velocity  = rel3 (getX dx) 0 (getY dx)
     motion' =
         case kp of
-          Just ShootKP -> jump 1.5 velocity
+          Just ShootKP -> bool (jump 1.5 velocity) id
+                          . isJust
+                          $ view (bCap.capMotion) b
           _            -> id
 
 jump :: Double -> Rel3 -> Capsule -> Capsule
