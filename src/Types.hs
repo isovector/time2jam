@@ -6,6 +6,7 @@ import Control.Lens
 import Data.SG.Geometry.ThreeDim
 import Data.SG.Vector as V
 import Game.Sequoia.Scene
+import Data.Maybe (isJust)
 import Game.Sequoia.Types
 
 type V3 = Point3' Double
@@ -88,7 +89,7 @@ makeLenses ''Ball
 
 data GObject = BallObj Ball
              | BallerObj Int Baller
-             deriving Eq
+             deriving (Eq, Show)
 makePrisms ''GObject
 
 instance Ord GObject where
@@ -96,6 +97,13 @@ instance Ord GObject where
   compare (BallObj _)     (BallerObj _ _) = LT
   compare (BallerObj _ _) (BallObj _)     = GT
   compare (BallerObj i _) (BallerObj j _) = compare i j
+
+isBall :: GObject -> Bool
+isBall = isJust . preview _BallObj
+
+isBaller :: Int -> GObject -> Bool
+isBaller i (BallerObj j _) = i == j
+isBaller _ _               = False
 
 objCap :: Lens' GObject Capsule
 objCap = lens getter setter

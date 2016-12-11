@@ -1,11 +1,9 @@
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Ball where
 
-import Baller
 import Control.Lens
 import Camera
-import Capsule
 import Game.Sequoia
 import Game.Sequoia.Color
 import Data.SG.Geometry.ThreeDim
@@ -20,21 +18,18 @@ defaultBall = Ball
 
 ballCapsule :: Capsule
 ballCapsule = Capsule
-  { _capPos      = mkV3 0 0 0
+  { _capPos      = mkV3 1.5 0 0
   , _capRadius   = 0.2
   , _capHeight   = 0.2
   , _capEthereal = True
   }
 
-updateBall :: Ball -> Ball
-updateBall = id
-
-makeBall :: V3 -> (Ball -> N Ball) -> N (B Ball)
-makeBall p f = do
-  (ball, input) <-
-    foldmp (defaultBall & ballCap . capPos .~ p) f
-  -- sync $ input (ballInput .~ input)
-  return ball
+updateBall :: Time -> Maybe Baller -> Ball -> Ball
+updateBall _ hit b@Ball{..} =
+    b & ballCap.capPos .~ (pos' & yPos .~ 1)
+  where
+    owner' = _ballOwner <|> hit
+    pos' = maybe (view (ballCap.capPos) b) (view $ bCap.capPos) $ owner'
 
 orange :: Color
 orange = rgb 0.98 0.51 0.13
@@ -53,9 +48,4 @@ drawBall cam ball =
 
     shadowPos    = yPos .~ 0 $ pos
     shadowRadius = 10 * depthMod cam pos
-
--- instance Managed Ball where
---   managedCapsule = view ballCap
---   managedInput x = view ballInput x . over ballCap
---   managedOnHit = undefined
 
