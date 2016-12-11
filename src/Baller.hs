@@ -8,6 +8,7 @@ import Input
 import Camera
 import Control.Lens
 import Capsule
+import Data.SG.Geometry.ThreeDim (yPos)
 import Game.Sequoia.Color
 import Game.Sequoia
 import Types
@@ -28,20 +29,27 @@ defaultBaller = Baller
   , _bDir   = rel3 0 0 0
   }
 
-updateBaller :: Time -> Controller -> Baller -> Baller
-updateBaller dt ctrl b@Baller{..} =
+updateBaller :: Time
+             -> Controller
+             -> Maybe Keypress
+             -> Baller
+             -> Baller
+updateBaller dt ctrl kp b@Baller{..} =
     b { _bCap = moveCapsule dir _bCap
       , _bDir = dir
       }
   where
     speed = bool 1 1.5 $ _ctrlTurbo ctrl
     dx = scaleRel (5 * speed * dt) $ _ctrlDir ctrl
-    dir  = rel3 (getX dx) 0 (getY dx)
+    dir  = rel3 (getX dx) height (getY dx)
+    height = case kp of
+               Just ShootKP -> 3
+               _ -> 0
 
 drawBaller :: Camera -> Baller -> Prop
 drawBaller cam b =
   group [ traced black
-          $ ellipse (toScreen cam pos)
+          $ ellipse (toScreen cam shadowPos)
                     shadowWidth
                     shadowHeight
         , traced (_bColor b)
@@ -54,6 +62,7 @@ drawBaller cam b =
         ]
   where
     pos = b ^. bCap . capPos
+    shadowPos = pos & yPos .~ 0
     size = depthMod cam pos
     width = 50 * size / 2
     height = negate $ 135 * size

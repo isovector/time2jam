@@ -17,6 +17,7 @@ import Court
 import Data.Default
 import Game.Sequoia
 import Game.Sequoia.Keyboard
+import Control.FRPNow.Time (delayTime)
 import Game.Sequoia.Utils
 import Input
 import Types
@@ -40,9 +41,9 @@ initGame = Game
 duplicate :: [(a, a)] -> [(a, a)]
 duplicate as = join $ as >>= \p -> return [p , swap p]
 
-updateGame :: Time -> Controller -> Game -> Game
-updateGame dt ctrl Game{..} =
-  let baller0 = updateBaller dt ctrl _gBaller0
+updateGame :: Time -> Controller -> Maybe Keypress -> Game -> Game
+updateGame dt ctrl kp Game{..} =
+  let baller0 = updateBaller dt ctrl kp _gBaller0
       ([ BallObj ball
        , BallerObj _ baller0'
        ]
@@ -65,12 +66,14 @@ magic :: Engine -> N (B Prop)
 magic _ = do
   clock      <- deltaTime          <$> getClock
   controller <- keyboardController <$> getKeyboard
+  oldCtrl    <- sample $ delayTime clock def controller
 
   (game, _) <-
     foldmp initGame $ \g -> do
       dt   <- sample clock
-      ctrl <- sample controller
-      return $ updateGame dt ctrl g
+      ctrl  <- sample oldCtrl
+      ctrl' <- sample controller
+      return $ updateGame dt ctrl' (getKP ctrl ctrl') g
 
   return $ do
     Game {..} <- sample game

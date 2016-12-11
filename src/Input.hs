@@ -2,11 +2,9 @@
 
 module Input where
 
-import Data.Bool (bool)
-import Control.Monad (liftM2)
+import Data.Default
 import Game.Sequoia
 import Game.Sequoia.Keyboard
-import Control.FRPNow.EvStream
 import Types
 
 data Controller = Controller
@@ -16,6 +14,9 @@ data Controller = Controller
   , _ctrlTurbo :: Bool
   }
 
+instance Default Controller where
+  def = Controller (rel 0 0) False False False
+
 keyboardController :: B [Key] -> B Controller
 keyboardController keys =
   Controller <$> wasd keys
@@ -23,20 +24,8 @@ keyboardController keys =
              <*> isDown keys FKey
              <*> isDown keys LeftShiftKey
 
-kpEvents :: B Controller -> EvStream Keypress
-kpEvents = liftM2 merge shootEvents passEvents
-  where
-    over x f = (x <$) . edges . fmap f
-    shootEvents = over ShootKP _ctrlShoot
-    passEvents  = over PassKP  _ctrlPass
-
-actionEvents :: B Controller -> B Baller -> B (E Action)
-actionEvents bctrl bb = next $ go <@@> kpEvents bctrl
-  where
-    go = do
-      ctrl <- sample bctrl
-      b    <- sample bb
-      return $ \case
-        ShootKP -> bool Jump Dunk $ _ctrlTurbo ctrl
-        PassKP -> Pass
+getKP :: Controller -> Controller -> Maybe Keypress
+getKP (Controller _ False _ _) (Controller _ True _ _) = Just ShootKP
+getKP (Controller _ _ False _) (Controller _ _ True _) = Just PassKP
+getKP _                        _                       = Nothing
 
