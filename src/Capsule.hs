@@ -7,13 +7,10 @@ module Capsule where
 import           Control.Arrow (second)
 import           Control.Comonad
 import           Control.Comonad.Store
-import           Control.FRPNow.EvStream
 import           Control.Lens
 import           Control.Monad.Writer
 import           Data.List (nub)
-import qualified Data.Map as M
-import           Data.Maybe (isJust, fromJust)
-import           Game.Sequoia.Signal
+import           Data.Maybe (isJust)
 import           Game.Sequoia.Types
 import           Types
 
@@ -70,21 +67,25 @@ stepPos as w = do
          $ cap : (snd <$> realInts)
 
 stepAllPos :: Ord s
-           => [(s, Capsule)]
-           -> Writer [(s, s)] [(s, Capsule)]
-stepAllPos caps = sequence $ fmap (liftM2 fmap (,) (flip peek w)) as
+           => Lens' s Capsule
+           -> [s]
+           -> Writer [(s, s)] [s]
+stepAllPos l caps =
+    forM caps $ \s -> do
+      newCap <- peek s w
+      return $ s & l .~ newCap
   where
-    w = extend (stepPos as)
-      . store (fromJust . flip lookup caps)
-      $ head as
-    as = fmap fst caps
+    w = extend (stepPos caps)
+      . store (view l)
+      $ head caps
 
-resolveCapsules :: (Ord a)
-               => [(a, Capsule)]
-               -> ([(a, Capsule)], [(a, a)])
-resolveCapsules = second nub
-                . runWriter
-                . findFixedPoint stepAllPos
+resolveCapsules :: (Ord s)
+               => Lens' s Capsule
+               -> [s]
+               -> ([s], [(s, s)])
+resolveCapsules l = second nub
+                  . runWriter
+                  . findFixedPoint (stepAllPos l)
 
 findFixedPoint :: (Eq a, Monad m) => (a -> m a) -> a -> m a
 findFixedPoint f a = go a (f a)
@@ -94,47 +95,4 @@ findFixedPoint f a = go a (f a)
       if b == b'
          then return b
          else go b' (f b')
-
-manage :: ([a] -> N ([a]))
-       -> [B ( a
-             , (a -> a) -> IO ()
-             )]
-       -> N (B [a])
-manage f mps = poll $ do
-  (bs, mbs) <- fmap unzip . sample $ sequenceA mps
-  res <- f bs
-  forM_ (zip res mbs) $ \(a, mb) -> sync . mb $ const a
-  return res
-
-reconcile :: Ord k
-          => (c -> k)
-          -> Lens' a c
-          -> [a]
-          -> [c]
-          -> [a]
-reconcile proj lx as cs =
-  fmap snd . M.toList
-           . M.differenceWith (\a c -> Just $ lx .~ c $ a)
-                              (toMap (proj . view lx) as)
-           $ toMap proj cs
-  where
-    toMap f x = M.fromList $ fmap ((,) =<< f) x
-
-manageCapsules :: [B ( Capsule
-                     , (Capsule -> Capsule) -> IO ()
-                     )]
-               -> N (B [Capsule], EvStream (Name, Name))
-manageCapsules cs = do
-  (es, mb) <- callbackStream
-  cs' <- flip manage cs $ \caps -> do
-    let (caps', hits) = resolveCapsules $ zip (fmap _capName caps) caps
-    sync . forM_ hits $ \(a, b) -> mb (a, b) >> mb (b, a)
-    return $ fmap snd caps'
-  return (cs', es)
-
-class Managed t where
-  managedCapsule :: t -> Capsule
-  managedInput   :: t -> (Capsule -> Capsule) -> IO ()
-  managedOnHit   :: t -> Capsule -> IO ()
-
 
