@@ -37,6 +37,10 @@ initGame = Game
   , _gBaller0 = defaultBaller
   }
 
+ownerToBaller :: Int -> Game -> Baller
+ownerToBaller 0 = _gBaller0
+ownerToBaller _ = error "update ownerToBaller"
+
 duplicate :: [(a, a)] -> [(a, a)]
 duplicate as = join $ as >>= \p -> return [p , swap p]
 
@@ -63,25 +67,29 @@ updateGame dt ctrl kp Game{..} =
 
 magic :: Engine -> N (B Prop)
 magic _ = do
-  clock      <- deltaTime          <$> getClock
+  clock      <- getClock
   controller <- keyboardController <$> getKeyboard
-  oldCtrl    <- sample $ delayTime clock def controller
+  oldCtrl    <- sample $ delayTime (deltaTime clock) def controller
 
   (game, _) <-
     foldmp initGame $ \g -> do
-      dt   <- sample clock
+      dt   <- sample $ deltaTime clock
       ctrl  <- sample oldCtrl
       ctrl' <- sample controller
       return $ updateGame dt ctrl' (getKP ctrl ctrl') g
 
   return $ do
-    Game {..} <- sample game
+    g@Game {..} <- sample game
     let cam = _gCamera
+    now <- sample $ totalTime clock
 
     return $ group $ [ drawCourt court cam
                      , drawBasket cam unitX
                      , drawBasket cam (-unitX)
-                     , drawBall cam _gBall
+                     , drawBall cam
+                                now
+                                (flip ownerToBaller g <$> _ballOwner _gBall)
+                                _gBall
                      , drawBaller cam _gBaller0
                      ]
 

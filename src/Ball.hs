@@ -2,6 +2,7 @@
 
 module Ball where
 
+import Data.Maybe (isJust)
 import Control.Lens
 import Camera
 import Game.Sequoia
@@ -32,14 +33,14 @@ updateBall _ hit ballers b@Ball{..} =
   where
     owner' = _ballOwner <|> hit
     pos' = maybe (view (ballCap.capPos) b)
-                 ((flip plusDir unitY) . view (bCap.capPos) . (ballers !!))
+                 (view (bCap.capPos) . (ballers !!))
                  owner'
 
 orange :: Color
 orange = rgb 0.98 0.51 0.13
 
-drawBall :: Camera -> Ball -> Prop
-drawBall cam ball =
+drawBall :: Camera -> Time -> Maybe Baller -> Ball -> Prop
+drawBall cam when owner ball =
     group [ filled black
             $ circle (toScreen cam shadowPos) shadowRadius
           , styled orange lineStyle
@@ -47,7 +48,12 @@ drawBall cam ball =
           ]
   where
     lineStyle = defaultLine { lineWidth = 2 }
-    pos       = ball ^. ballCap . capPos
+    pos       = plusDir (ball ^. ballCap . capPos) dpos
+    dpos      = case isJust . view (bCap.capMotion) <$> owner of
+                  Just True  -> unitY
+                  Just False -> dribble
+                  Nothing    -> zero
+    dribble   = scaleRel ((/2) $ sin (when * 9) + 1) unitY
     radius    = 10 * depthMod cam pos
 
     shadowPos    = yPos .~ 0 $ pos

@@ -47,6 +47,9 @@ unitY = rel3 0 1 0
 unitZ :: Rel3
 unitZ = rel3 0 0 1
 
+zero :: Rel3
+zero = rel3 0 0 0
+
 data Keypress = ShootKP
               | PassKP
               deriving (Show, Eq, Ord)
