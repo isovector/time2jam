@@ -15,8 +15,10 @@ import Capsule
 import Control.FRPNow.Time (delayTime)
 import Control.Lens
 import Control.Monad (join)
+import Control.Monad.Writer (runWriter)
 import Court
 import Data.Default
+import Data.List (find)
 import Data.Maybe (listToMaybe)
 import Data.Tuple (swap)
 import Game.Sequoia
@@ -46,7 +48,9 @@ duplicate as = join $ as >>= \p -> return [p , swap p]
 
 updateGame :: Time -> Controller -> Maybe Keypress -> Game -> Game
 updateGame dt ctrl kp Game{..} =
-  let baller0 = updateBaller dt ctrl kp _gBaller0
+  let (baller0, actions) = runWriter $ updateBaller dt ctrl kp _gBaller0
+      shotAction = find isShootAction actions
+
       ([ BallObj ball
        , BallerObj _ baller0'
        ], hits
@@ -60,9 +64,11 @@ updateGame dt ctrl kp Game{..} =
       allHits  = duplicate hits
       ballHits = fmap snd $ filter (isBall . fst) allHits
       ball'    = updateBall dt
-                            (fmap fst . preview _BallerObj =<< listToMaybe ballHits)
-                            [baller0']
-                            ball
+                   (fmap fst . preview _BallerObj =<< listToMaybe ballHits)
+                   [baller0']
+                   shotAction
+                   ball
+
    in Game camera' ball' baller0'
 
 magic :: Engine -> N (B Prop)
@@ -73,7 +79,7 @@ magic _ = do
 
   (game, _) <-
     foldmp initGame $ \g -> do
-      dt   <- sample $ deltaTime clock
+      dt    <- sample $ deltaTime clock
       ctrl  <- sample oldCtrl
       ctrl' <- sample controller
       return $ updateGame dt ctrl' (getKP ctrl ctrl') g
@@ -83,15 +89,16 @@ magic _ = do
     let cam = _gCamera
     now <- sample $ totalTime clock
 
-    return $ group $ [ drawCourt court cam
-                     , drawBasket cam RNet
-                     , drawBasket cam LNet
-                     , drawBall cam
-                                now
-                                (flip ownerToBaller g <$> _ballOwner _gBall)
-                                _gBall
-                     , drawBaller cam _gBaller0
-                     ]
+    return $ group
+           [ drawCourt court cam
+           , drawBasket cam RNet
+           , drawBasket cam LNet
+           , drawBall cam
+                      now
+                      (flip ownerToBaller g <$> _ballOwner _gBall)
+                      _gBall
+           , drawBaller cam _gBaller0
+           ]
 
 
 main :: IO ()

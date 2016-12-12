@@ -60,9 +60,13 @@ netDirection LNet = unitX
 netDirection RNet = -unitX
 
 data Keypress = JumpKP
-              | ShootKP
               | PassKP
               deriving (Show, Eq, Ord)
+
+data Action = Shoot (Capsule -> Motion)
+
+isShootAction :: Action -> Bool
+isShootAction (Shoot _) = True
 
 data Motion = Motion
   { _mPath       :: Double -> V3
@@ -88,18 +92,24 @@ data Capsule = Capsule
 makeLenses ''Motion
 makeLenses ''Capsule
 
+data BallerState = BSDefault
+                 | BSJumping
+                 | BSLanded
+                 deriving (Eq, Show, Ord, Bounded)
+
 data Baller = Baller
   { _bCap   :: Capsule
   , _bColor :: Color
   , _bFwd   :: Net
   , _bDir   :: Rel3
+  , _bState :: BallerState
   } deriving (Eq, Show)
 makeLenses ''Baller
 
-data BallState = BSDefault
-               | BSShoot
-               | BSRebound
-               | BSPassed
+data BallState = BallDefault
+               | BallShoot
+               | BallRebound
+               | BallPassed
                deriving (Eq, Show, Ord, Bounded)
 
 data Ball = Ball

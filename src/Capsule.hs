@@ -125,8 +125,10 @@ makeMotion duration v3s c = Motion
   }
 
 moveTo :: Time -> [V3] -> Capsule -> Capsule
-moveTo duration v3s c =
-  c & capMotion .~ Just (makeMotion duration v3s c)
+moveTo duration v3s = setMotion (makeMotion duration v3s)
+
+setMotion :: (Capsule -> Motion) -> Capsule -> Capsule
+setMotion m c = c & capMotion .~ Just (m c)
 
 after :: Time -> [V3] -> Capsule -> Capsule
 after duration v3s c =

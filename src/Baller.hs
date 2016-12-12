@@ -3,6 +3,7 @@
 
 module Baller where
 
+import Control.Monad.Writer
 import Basket
 import Camera
 import Capsule
@@ -30,14 +31,17 @@ defaultBaller = Baller
   , _bColor = rgb 0.67 0 0.47
   , _bFwd   = RNet
   , _bDir   = rel3 0 0 0
+  , _bState = BSDefault
   }
 
 updateBaller :: Time
              -> Controller
              -> Maybe Keypress
              -> Baller
-             -> Baller
-updateBaller dt ctrl kp b@Baller{..} =
+             -> Writer [Action] Baller
+updateBaller dt ctrl kp b@Baller{..} = do
+  tell actions
+  return $
     b { _bCap = updateCapsule dt
                 . motion'
                 $ moveCapsule (scaleRel dt velocity) _bCap
@@ -55,12 +59,16 @@ updateBaller dt ctrl kp b@Baller{..} =
                $ dot velocity (posDif (netPos _bFwd)
                                     $ _capPos _bCap)
     motion' =
-        case kp of
-          Just JumpKP -> bool id jumpAction
-                          . not
-                          . isJust
-                          $ view (bCap.capMotion) b
-          _           -> id
+      case kp of
+        Just JumpKP -> bool id jumpAction
+                         . not
+                         . isJust
+                         $ view (bCap.capMotion) b
+        _           -> id
+    actions =
+      case kp of
+        Just JumpKP -> [Shoot $ shoot _bFwd]
+        _           -> []
 
 jump :: Double -> Rel3 -> Capsule -> Capsule
 jump jumpHeight velocity c@Capsule{..} =
@@ -68,6 +76,25 @@ jump jumpHeight velocity c@Capsule{..} =
                              + scaleRel 0.5 velocity
             , plusDir _capPos velocity
             ] c
+
+shoot :: Net -> Capsule -> Motion
+shoot net c@Capsule {..} =
+  makeMotion 1 [ jumpCtrlPt
+               , netCtrlPt
+               , netPos'
+               ] c
+  where
+    -- TODO(sandy): make this less copy-paste
+    dunkHeight = 3
+    dunkCtrl = scaleRel dunkHeight unitY
+    netDir = let (x, _, z) = unpackRel3 $ posDif netPos' _capPos
+              in normalize $ rel3 x 0 z
+    jumpCtrlPt = add (scaleRel (view yPos netPos') unitY)
+               . add netDir
+               $ add dunkCtrl _capPos
+    netCtrlPt = add (scaleRel 2 netDir) $ add dunkCtrl netPos'
+    netPos' = netPos net
+    add = flip plusDir
 
 dunk :: Net -> Capsule -> Capsule
 dunk net c@Capsule{..} =

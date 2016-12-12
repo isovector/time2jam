@@ -2,18 +2,20 @@
 
 module Ball where
 
-import Data.Maybe (isJust)
-import Control.Lens
 import Camera
+import Capsule
+import Control.Lens
+import Data.Bool (bool)
+import Data.Maybe (isJust)
+import Data.SG.Geometry.ThreeDim
 import Game.Sequoia
 import Game.Sequoia.Color
-import Data.SG.Geometry.ThreeDim
 import Types
 
 defaultBall :: Ball
 defaultBall = Ball
   { _ballCap = ballCapsule
-  , _ballState = BSDefault
+  , _ballState = BallDefault
   , _ballOwner = Nothing
   }
 
@@ -26,12 +28,25 @@ ballCapsule = Capsule
   , _capMotion   = Nothing
   }
 
-updateBall :: Time -> Maybe Int -> [Baller] ->  Ball -> Ball
-updateBall _ hit ballers b@Ball{..} =
-    b & ballCap.capPos .~ pos'
-      & ballOwner      .~ owner'
+updateBall :: Time
+           -> Maybe Int
+           -> [Baller]
+           -> Maybe Action
+           -> Ball
+           -> Ball
+updateBall dt hit ballers shoot b@Ball{..} =
+    b { _ballOwner = owner'
+      , _ballCap = updateCapsule dt . motion' $ _ballCap
+        { _capPos = pos'
+        }
+      }
   where
-    owner' = _ballOwner <|> hit
+    motion' =
+      case shoot of
+        Just (Shoot m) -> setMotion m
+        _              -> id
+
+    owner' = bool (_ballOwner <|> hit) Nothing $ isJust shoot
     pos' = maybe (view (ballCap.capPos) b)
                  (view (bCap.capPos) . (ballers !!))
                  owner'
