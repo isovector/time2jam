@@ -60,6 +60,7 @@ netDirection LNet = unitX
 netDirection RNet = -unitX
 
 data Keypress = JumpKP
+              | ShootKP
               | PassKP
               deriving (Show, Eq, Ord)
 
@@ -92,9 +93,14 @@ data Capsule = Capsule
 makeLenses ''Motion
 makeLenses ''Capsule
 
+data Possession = Has
+                | Doesnt
+                deriving (Eq, Show, Ord, Bounded, Enum)
+
 data BallerState = BSDefault
                  | BSJumping
-                 | BSLanded
+                 | BSShooting
+                 | BSGrounded
                  deriving (Eq, Show, Ord, Bounded)
 
 data Baller = Baller

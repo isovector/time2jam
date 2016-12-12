@@ -37,20 +37,25 @@ defaultBaller = Baller
 updateBaller :: Time
              -> Controller
              -> Maybe Keypress
+             -> Possession
              -> Baller
              -> Writer [Action] Baller
-updateBaller dt ctrl kp b@Baller{..} = do
+updateBaller dt ctrl kp p b@Baller{..} = do
   tell actions
   return $
-    b { _bCap = updateCapsule dt
-                . motion'
-                $ moveCapsule (scaleRel dt velocity) _bCap
+    b { _bCap = cap'
       , _bDir = velocity
+      , _bState = state'
       }
   where
-    speed = bool 1 1.5 $ _ctrlTurbo ctrl
+    speed = case (_bState, _ctrlTurbo ctrl) of
+              (BSDefault, True)  -> 1.5
+              (BSDefault, False) -> 1
+              (_, _)             -> 0
+
     dx = scaleRel (5 * speed) $ _ctrlDir ctrl
     velocity  = rel3 (getX dx) 0 (getY dx)
+    hasMotion = isJust $ view capMotion _bCap
     jumpAction = bool (jump 1.5 velocity)
                       (dunk _bFwd)
                       shouldDunk
@@ -58,17 +63,43 @@ updateBaller dt ctrl kp b@Baller{..} = do
                . (> 0)
                $ dot velocity (posDif (netPos _bFwd)
                                     $ _capPos _bCap)
-    motion' =
-      case kp of
-        Just JumpKP -> bool id jumpAction
-                         . not
-                         . isJust
-                         $ view (bCap.capMotion) b
-        _           -> id
-    actions =
-      case kp of
-        Just JumpKP -> [Shoot $ shoot _bFwd]
-        _           -> []
+
+    cap' = updateCapsule dt
+         . motion'
+         $ moveCapsule (scaleRel dt velocity) _bCap
+
+    canJump = kp == Just JumpKP
+           && _bState /= BSJumping
+           && _bState /= BSShooting
+           && not hasMotion
+
+    canShoot = kp == Just ShootKP
+            && ( _bState == BSShooting
+              || _bState == BSJumping
+               )
+            && p == Has
+
+    state' =
+      -- TODO(sandy): this could be hella simplified if we knew whether they
+      -- had the ball when left the ground
+      case (_bState, p, hasMotion, canJump, canShoot) of
+        (BSJumping,  _,      False, _,     _    ) -> BSDefault
+        (BSShooting, Has,    False, _,     _    ) -> BSGrounded
+        (BSShooting, Doesnt, False, _,     _    ) -> BSDefault
+        (BSGrounded, Doesnt, False, _,     _    ) -> BSDefault
+        (bs,         _,      True,  _,     False) -> bs
+        (_,          Has,    False, True,  _    ) -> BSShooting
+        (_,          Doesnt, False, True,  _    ) -> BSJumping
+        (BSGrounded, Has,    False, False, _    ) -> BSGrounded
+        (BSDefault,  _,      False, False, _    ) -> BSDefault
+        (BSShooting, Has,    True,  _,     True ) -> BSJumping
+        (BSJumping,  _,      _,     _,     True ) -> BSJumping
+        (BSGrounded, _,      _,     _,     True ) -> error "tried to shoot while grounded"
+        (BSDefault,  _,      _,     _,     True ) -> error "tried to shoot while default"
+        (BSShooting, Doesnt, _,     _,     True ) -> error "tried to shoot without ball"
+
+    motion' = bool id jumpAction canJump
+    actions = bool [] [Shoot $ shoot _bFwd] canShoot
 
 jump :: Double -> Rel3 -> Capsule -> Capsule
 jump jumpHeight velocity c@Capsule{..} =

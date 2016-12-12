@@ -17,6 +17,7 @@ import Control.Lens
 import Control.Monad (join)
 import Control.Monad.Writer (runWriter)
 import Court
+import Data.Bool (bool)
 import Data.Default
 import Data.List (find)
 import Data.Maybe (listToMaybe)
@@ -48,7 +49,8 @@ duplicate as = join $ as >>= \p -> return [p , swap p]
 
 updateGame :: Time -> Controller -> Maybe Keypress -> Game -> Game
 updateGame dt ctrl kp Game{..} =
-  let (baller0, actions) = runWriter $ updateBaller dt ctrl kp _gBaller0
+  let (baller0, actions) =
+        runWriter $ updateBaller dt ctrl kp (possesses 0) _gBaller0
       shotAction = find isShootAction actions
 
       ([ BallObj ball
@@ -58,18 +60,24 @@ updateGame dt ctrl kp Game{..} =
              [ BallObj _gBall
              , BallerObj 0 baller0
              ]
+      ballers = [baller0']
       camera' = updateCam dt
               $ _gCamera
               & camFocus .~ view (ballCap . capPos) ball'
       allHits  = duplicate hits
       ballHits = fmap snd $ filter (isBall . fst) allHits
       ball'    = updateBall dt
-                   (fmap fst . preview _BallerObj =<< listToMaybe ballHits)
-                   [baller0']
+                   (fmap fst . preview _BallerObj
+                      =<< listToMaybe ballHits)
+                   ballers
                    shotAction
                    ball
 
    in Game camera' ball' baller0'
+ where
+   possesses i = maybe Doesnt
+                       (bool Doesnt Has . (== i))
+                       $ _ballOwner _gBall
 
 magic :: Engine -> N (B Prop)
 magic _ = do
