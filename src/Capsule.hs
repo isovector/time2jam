@@ -105,22 +105,41 @@ updateCapsule dt c@Capsule{..}
   | Just m <- _capMotion =
       let progress' = _mProgress m + _mSpeedMult m * dt
           continue  = progress' <= 1
+          updated = c { _capPos = pos' }
           motion' = case continue of
                       True  -> Just $ m { _mProgress = progress' }
-                      False -> Nothing
+                      False -> ($ updated) <$> _mAfterwards m
           pos' = _mPath m $ bool 1 progress' continue
 
-       in c { _capMotion = motion'
-            , _capPos    = pos'
-            }
+       in updated { _capMotion = motion'
+                  }
   | otherwise = c
 
+
+makeMotion :: Time -> [V3] -> Capsule -> Motion
+makeMotion duration v3s c = Motion
+  { _mProgress   = 0
+  , _mPath       = bezier $ _capPos c : v3s
+  , _mSpeedMult  = 1 / duration
+  , _mAfterwards = Nothing
+  }
+
 moveTo :: Time -> [V3] -> Capsule -> Capsule
-moveTo duration v3s c = c & capMotion .~ Just motion'
+moveTo duration v3s c =
+  c & capMotion .~ Just (makeMotion duration v3s c)
+
+after :: Time -> [V3] -> Capsule -> Capsule
+after duration v3s c =
+  c & capMotion .~ Just (
+    case _capMotion c of
+      Just m  -> go m
+      Nothing -> motion c
+    )
   where
-    motion' = Motion
-      { _mProgress  = 0
-      , _mPath      = bezier $ _capPos c : v3s
-      , _mSpeedMult = 1 / duration
-      }
+    motion = makeMotion duration v3s
+    go :: Motion -> Motion
+    go m =
+      case _mAfterwards m of
+        Just m' -> m & mAfterwards .~ Just (fmap go m')
+        Nothing -> m & mAfterwards .~ Just motion
 

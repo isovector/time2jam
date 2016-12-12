@@ -25,7 +25,8 @@ keyboardController keys =
              <*> isDown keys LeftShiftKey
 
 getKP :: Controller -> Controller -> Maybe Keypress
-getKP (Controller _ False _ _) (Controller _ True _ _) = Just ShootKP
-getKP (Controller _ _ False _) (Controller _ _ True _) = Just PassKP
-getKP _                        _                       = Nothing
+getKP (Controller _ False _ _) (Controller _ True _ _)  = Just JumpKP
+getKP (Controller _ True _ _)  (Controller _ False _ _) = Just ShootKP
+getKP (Controller _ _ False _) (Controller _ _ True _)  = Just PassKP
+getKP _                        _                        = Nothing
 

@@ -84,8 +84,8 @@ magic _ = do
     now <- sample $ totalTime clock
 
     return $ group $ [ drawCourt court cam
-                     , drawBasket cam unitX
-                     , drawBasket cam (-unitX)
+                     , drawBasket cam RNet
+                     , drawBasket cam LNet
                      , drawBall cam
                                 now
                                 (flip ownerToBaller g <$> _ballOwner _gBall)

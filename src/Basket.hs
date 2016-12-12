@@ -1,32 +1,40 @@
 module Basket where
 
-import Types
-import Game.Sequoia
-import Game.Sequoia.Color
 import Camera
 import Constants
+import Game.Sequoia
+import Game.Sequoia.Color
+import Types
 
 
-drawBasket :: Camera -> Rel3 -> Prop
-drawBasket cam fwd =
+drawBasket :: Camera -> Net -> Prop
+drawBasket cam net =
     group [ filled (rgb 0.13 0.13 0.13)
             $ billboard cam
-                        bPos
+                        (basketPos net)
                         unitY
                         unitZ
                         courtBoardWidth
                         courtBoardHeight
           , traced red
-            $ ellipse (toScreen cam netPos) netWidth netHeight
+            $ ellipse (toScreen cam (netPos net)) netWidth netHeight
           ]
   where
     netWidth = 40
     netHeight = 20
-    bPos = plusDir (mkV3 0 0 0) $ scaleRel (courtLength / 2) (-fwd)
-                                + scaleRel courtBasketHeight unitY
-    netPos = plusDir ( plusDir bPos
-                     $ scaleRel (courtBoardHeight / 2) (-unitY))
-           $ scaleRel 0.5 fwd
+
+basketPos :: Net -> V3
+basketPos n = plusDir (mkV3 0 0 0) $ scaleRel (courtLength / 2) (-fwd)
+                                   + scaleRel courtBasketHeight unitY
+  where
+    fwd = netDirection n
+
+netPos :: Net -> V3
+netPos n = plusDir ( plusDir (basketPos n)
+                    $ scaleRel (courtBoardHeight / 2) (-unitY))
+         $ scaleRel 0.5 fwd
+  where
+    fwd = netDirection n
 
 billboard :: Camera
           -> V3

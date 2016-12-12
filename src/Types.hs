@@ -17,6 +17,9 @@ type Prop = Prop' ()
 unpackV3 :: V3 -> (Double, Double, Double)
 unpackV3 (Point3 x y z) = (x, y, z)
 
+unpackRel3 :: Rel3 -> (Double, Double, Double)
+unpackRel3 (Rel3 (x, y, z) _) = (x, y, z)
+
 mkV3 :: Double -> Double -> Double -> V3
 mkV3 = Point3
 
@@ -50,21 +53,22 @@ unitZ = rel3 0 0 1
 zero :: Rel3
 zero = rel3 0 0 0
 
-data Keypress = ShootKP
+data Net = LNet | RNet deriving (Eq, Show, Ord, Bounded, Enum)
+
+netDirection :: Net -> Rel3
+netDirection LNet = unitX
+netDirection RNet = -unitX
+
+data Keypress = JumpKP
+              | ShootKP
               | PassKP
               deriving (Show, Eq, Ord)
 
-data Action = Jump
-            | Shoot
-            | Pass
-            | Shove
-            | Dunk
-            deriving (Show, Eq, Ord)
-
 data Motion = Motion
-  { _mPath      :: Double -> V3
-  , _mProgress  :: Double
-  , _mSpeedMult :: Double
+  { _mPath       :: Double -> V3
+  , _mProgress   :: Double
+  , _mSpeedMult  :: Double
+  , _mAfterwards :: Maybe (Capsule -> Motion)
   }
 
 instance Eq Motion where
@@ -80,12 +84,14 @@ data Capsule = Capsule
   , _capEthereal :: Bool
   , _capMotion   :: Maybe Motion
   } deriving (Eq, Show)
+
+makeLenses ''Motion
 makeLenses ''Capsule
 
 data Baller = Baller
   { _bCap   :: Capsule
   , _bColor :: Color
-  , _bFwd   :: Rel3  -- ^ Direction toward the baller's net.
+  , _bFwd   :: Net
   , _bDir   :: Rel3
   } deriving (Eq, Show)
 makeLenses ''Baller
