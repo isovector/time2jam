@@ -63,7 +63,8 @@ drawBall cam when owner ball =
           ]
   where
     lineStyle = defaultLine { lineWidth = 2 }
-    pos       = plusDir (ball ^. ballCap . capPos) dpos
+    pos       = plusDir (ball ^. ballCap.capPos) $ bool dpos zero hasMotion
+    hasMotion = isJust $ ball ^. ballCap.capMotion
     dpos      = case isJust . view (bCap.capMotion) <$> owner of
                   Just True  -> unitY
                   Just False -> dribble

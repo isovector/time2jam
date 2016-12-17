@@ -1,7 +1,7 @@
 {-# LANGUAGE LambdaCase                  #-}
 {-# LANGUAGE RecordWildCards             #-}
-{-# LANGUAGE RecursiveDo                 #-}
 {-# LANGUAGE ScopedTypeVariables         #-}
+{-# LANGUAGE TemplateHaskell             #-}
 {-# LANGUAGE TupleSections               #-}
 {-# OPTIONS_GHC -fno-warn-unused-do-bind #-}
 
@@ -32,6 +32,7 @@ data Game = Game
   , _gBall    :: Ball
   , _gBaller0 :: Baller
   }
+makeLenses ''Game
 
 initGame :: Game
 initGame = Game

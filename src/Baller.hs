@@ -123,7 +123,7 @@ shoot net c@Capsule {..} =
     jumpCtrlPt = add (scaleRel (view yPos netPos') unitY)
                . add netDir
                $ add dunkCtrl _capPos
-    netCtrlPt = add (scaleRel 2 netDir) $ add dunkCtrl netPos'
+    netCtrlPt = add (negate netDir) $ add dunkCtrl netPos'
     netPos' = netPos net
     add = flip plusDir
 
