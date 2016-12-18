@@ -3,10 +3,10 @@
 module Types where
 
 import Control.Lens
+import Data.Maybe (isJust)
 import Data.SG.Geometry.ThreeDim
 import Data.SG.Vector as V
 import Game.Sequoia.Scene
-import Data.Maybe (isJust)
 import Game.Sequoia.Types
 
 type V3 = Point3' Double
