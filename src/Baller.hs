@@ -14,6 +14,7 @@ import Data.SG.Geometry.ThreeDim (yPos)
 import Game.Sequoia
 import Game.Sequoia.Color
 import Input
+import Motion
 import Types
 
 ballerCapsule :: Capsule
@@ -42,8 +43,9 @@ updateBaller :: Time
              -> Writer [Action] Baller
 updateBaller dt ctrl kp p b@Baller{..} = do
   tell actions
+  newCap <- cap'
   return $
-    b { _bCap = cap'
+    b { _bCap = newCap
       , _bDir = velocity
       , _bState = state'
       }
@@ -98,13 +100,13 @@ jump jumpHeight velocity c@Capsule{..} =
             ] c
 
 shoot :: Net -> Capsule -> Motion
-shoot net c@Capsule {..} =
-  makeMotion 1 [ jumpCtrlPt
-               , netCtrlPt
-               , netPos'
-               ] c
-    & mAfterwards .~
-      Just (makeMotion 0.2 [ netPos' & yPos .~ 0 ])
+shoot net Capsule {..} = motion $ do
+    a <- runBezier 1 [ jumpCtrlPt
+                     , netCtrlPt
+                     , netPos'
+                     ] _capPos
+    lift $ tell [Debug "two points!"]
+    runBezier 0.2 [ netPos' & yPos .~ 0 ] a
   where
     -- TODO(sandy): make this less copy-paste
     dunkHeight = 3
@@ -119,13 +121,12 @@ shoot net c@Capsule {..} =
     add = flip plusDir
 
 dunk :: Net -> Capsule -> Capsule
-dunk net c@Capsule{..} =
-    after  0.3 [ netPos' & yPos .~ 0
-               ]
-  $ moveTo 0.7 [ jumpCtrlPt
-               , netCtrlPt
-               , netPos'
-               ] c
+dunk net c@Capsule{..} = setMotion c . motion $ do
+    runBezier 0.7 [ jumpCtrlPt
+                  , netCtrlPt
+                  , netPos'
+                  ] _capPos
+     >>= runBezier 0.3 [ netPos' & yPos .~ 0 ]
   where
     dunkHeight = 3
     dunkCtrl = scaleRel dunkHeight unitY

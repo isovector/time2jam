@@ -14,13 +14,14 @@ import Camera
 import Capsule
 import Control.FRPNow.Time (delayTime)
 import Control.Lens
-import Control.Monad (join)
-import Control.Monad.Writer (runWriter)
+import Control.Monad (join, forM_)
+import Control.Monad.Writer (Writer, runWriter, tell)
+import Control.Monad.IO.Class (liftIO)
 import Court
 import Data.Bool (bool)
 import Data.Default
 import Data.List (find)
-import Data.Maybe (listToMaybe)
+import Data.Maybe (listToMaybe, mapMaybe)
 import Data.Tuple (swap)
 import Game.Sequoia
 import Game.Sequoia.Keyboard
@@ -48,11 +49,16 @@ ownerToBaller _ = error "update ownerToBaller"
 duplicate :: [(a, a)] -> [(a, a)]
 duplicate as = join $ as >>= \p -> return [p , swap p]
 
-updateGame :: Time -> Controller -> Maybe Keypress -> Game -> Game
-updateGame dt ctrl kp Game{..} =
-  let (baller0, actions) =
+updateGame :: Time
+           -> Controller
+           -> Maybe Keypress
+           -> Game
+           -> Writer [String] Game
+updateGame dt ctrl kp Game{..} = do
+  let (baller0, baller0Acts) =
         runWriter $ updateBaller dt ctrl kp (possesses 0) _gBaller0
-      shotAction = find isShootAction actions
+      ballerActs = baller0Acts
+      shotAction = find (has _Shoot) ballerActs
 
       ([ BallObj ball
        , BallerObj _ baller0'
@@ -67,14 +73,18 @@ updateGame dt ctrl kp Game{..} =
               & camFocus .~ view (ballCap . capPos) ball'
       allHits  = duplicate hits
       ballHits = fmap snd $ filter (isBall . fst) allHits
-      ball'    = updateBall dt
-                   (fmap fst . preview _BallerObj
-                      =<< listToMaybe ballHits)
-                   ballers
-                   shotAction
-                   ball
+      (ball', ballActs) =
+        runWriter $
+          updateBall dt
+                     (fmap fst . preview _BallerObj
+                        =<< listToMaybe ballHits)
+                     ballers
+                     shotAction
+                     ball
+      allActs = ballerActs ++ ballActs
 
-   in Game camera' ball' baller0'
+  tell $ mapMaybe (preview _Debug) allActs
+  return $ Game camera' ball' baller0'
  where
    possesses i = maybe Doesnt
                        (bool Doesnt Has . (== i))
@@ -91,7 +101,10 @@ magic _ = do
       dt    <- sample $ deltaTime clock
       ctrl  <- sample oldCtrl
       ctrl' <- sample controller
-      return $ updateGame dt ctrl' (getKP ctrl ctrl') g
+      let (game', msgs) = runWriter
+                        $ updateGame dt ctrl' (getKP ctrl ctrl') g
+      liftIO $ forM_ msgs putStrLn
+      return game'
 
   return $ do
     g@Game {..} <- sample game

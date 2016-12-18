@@ -3,9 +3,13 @@
 module Types where
 
 import Control.Lens
+import Control.Monad.Coroutine
+import Control.Monad.Coroutine.SuspensionFunctors
+import Control.Monad.Writer (Writer)
 import Data.Maybe (isJust)
 import Data.SG.Geometry.ThreeDim
 import Data.SG.Vector as V
+import Game.Sequoia (Time)
 import Game.Sequoia.Scene
 import Game.Sequoia.Types
 
@@ -65,16 +69,10 @@ data Keypress = JumpKP
               deriving (Show, Eq, Ord)
 
 data Action = Shoot (Capsule -> Motion)
+            | Debug String
 
-isShootAction :: Action -> Bool
-isShootAction (Shoot _) = True
-
-data Motion = Motion
-  { _mPath       :: Double -> V3
-  , _mProgress   :: Double
-  , _mSpeedMult  :: Double
-  , _mAfterwards :: Maybe (Capsule -> Motion)
-  }
+type Machine a = Coroutine (Request V3 Double) (Writer [Action]) a
+newtype Motion = Motion (Time -> Machine V3)
 
 instance Eq Motion where
   _ == _ = True
@@ -90,7 +88,8 @@ data Capsule = Capsule
   , _capMotion   :: Maybe Motion
   } deriving (Eq, Show)
 
-makeLenses ''Motion
+makePrisms ''Action
+makePrisms ''Motion
 makeLenses ''Capsule
 
 data Possession = Has

@@ -1,6 +1,5 @@
 {-# LANGUAGE LambdaCase   #-}
 {-# LANGUAGE RankNTypes   #-}
-{-# LANGUAGE ViewPatterns #-}
 
 module Motion where
 
@@ -11,8 +10,8 @@ import Control.Monad.Writer
 import Control.Monad.Coroutine
 import Control.Monad.Coroutine.SuspensionFunctors
 
-
-type Machine a = Coroutine (Request V3 Double) (Writer [Action]) a
+motion :: Machine V3 -> Motion
+motion = Motion . const
 
 runBezier :: Time -> [V3] -> V3 -> Machine V3
 runBezier duration v3s pos = do
@@ -26,23 +25,8 @@ runBezier duration v3s pos = do
          True  -> return ()
          False -> loop b (dt + t)
 
-runMotion :: V3 -> Machine ()
-runMotion pos = do
-  pos1 <- runBezier 1 [mkV3 1 0 0] pos
-  pos2 <- runBezier 1 [mkV3 1 1 0] pos1
-  lift $ tell [Shoot undefined]
-  pos3 <- runBezier 1 [mkV3 0 1 0] pos2
-  _ <- runBezier 1 [mkV3 0 0 0] pos3
-  return ()
-
-pump :: Machine a -> Writer [Action] [V3]
-pump = resume >=> \case
-  Left (Request v3 c) -> (v3 :) <$> pump (c 0.1)
-  Right _ -> return []
-
-showV3 :: V3 -> String
-showV3 (unpackV3 -> (x, y, z)) = take 5 (show x) <> "\t"
-                              <> take 5 (show y) <> "\t"
-                              <> take 5 (show z)
-
+runMotion :: Time -> Motion -> Writer [Action] (V3, Maybe Motion)
+runMotion dt (Motion m) = (resume $ m dt) >>= \case
+  Left (Request v3 c) -> return (v3, Just $ Motion c)
+  Right v3            -> return (v3, Nothing)
 

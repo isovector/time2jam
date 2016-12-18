@@ -5,6 +5,7 @@ module Ball where
 import Camera
 import Capsule
 import Control.Lens
+import Control.Monad.Writer (Writer)
 import Data.Bool (bool)
 import Data.Maybe (isJust)
 import Data.SG.Geometry.ThreeDim
@@ -32,18 +33,19 @@ updateBall :: Time
            -> [Baller]
            -> Maybe Action
            -> Ball
-           -> Ball
-updateBall dt hit ballers shoot b@Ball{..} =
-    b { _ballCap = updateCapsule dt
-                 . motion'
-                 . (capPos .~ pos')
-                 $ _ballCap
-      , _ballState = state'
-      }
+           -> Writer [Action] Ball
+updateBall dt hit ballers shoot b@Ball{..} = do
+    cap' <- updateCapsule dt
+          . motion'
+          . (capPos .~ pos')
+          $ _ballCap
+    return $ b { _ballCap = cap'
+               , _ballState = state'
+               }
   where
     motion' =
       case shoot of
-        Just (Shoot m) -> setMotion m
+        Just (Shoot m) -> flip setMotionwtf m
         _              -> id
 
     hasMotion = isJust $ view capMotion _ballCap
@@ -54,6 +56,7 @@ updateBall dt hit ballers shoot b@Ball{..} =
         (BallUnowned, Nothing, _, _)         -> BallUnowned
         (BallOwned x, _, Nothing, _)         -> BallOwned x
         (BallOwned x, _, Just (Shoot _), _)  -> BallShoot x
+        (BallOwned x, _, Just _, _)          -> BallOwned x
         (BallShoot x, Just y, _, _) | x /= y -> BallOwned y
         (BallShoot x, _, _, True)            -> BallShoot x
         (BallShoot _, _, _, False)           -> BallUnowned

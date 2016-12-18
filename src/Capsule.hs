@@ -5,16 +5,15 @@
 
 module Capsule where
 
-import Bezier
 import Control.Arrow (second)
 import Control.Comonad
 import Control.Comonad.Store
 import Control.Lens
 import Control.Monad.Writer
-import Data.Bool (bool)
 import Data.List (nub)
 import Data.Maybe (isJust)
 import Game.Sequoia
+import Motion
 import Types
 
 moveCapsule :: Rel3 -> Capsule -> Capsule
@@ -100,48 +99,26 @@ findFixedPoint f a = go a (f a)
          then return b
          else go b' (f b')
 
-updateCapsule :: Time -> Capsule -> Capsule
+updateCapsule :: Time -> Capsule -> Writer [Action] Capsule
 updateCapsule dt c@Capsule{..}
-  | Just m <- _capMotion =
-      let progress' = _mProgress m + _mSpeedMult m * dt
-          continue  = progress' <= 1
-          updated = c { _capPos = pos' }
-          motion' = case continue of
-                      True  -> Just $ m { _mProgress = progress' }
-                      False -> ($ updated) <$> _mAfterwards m
-          pos' = _mPath m $ bool 1 progress' continue
-
-       in updated { _capMotion = motion'
-                  }
-  | otherwise = c
+  | Just m <- _capMotion = do
+      (pos', motion') <- runMotion dt m
+      return $ c & capPos .~ pos'
+                 & capMotion .~ motion'
+  | otherwise = return c
 
 
 makeMotion :: Time -> [V3] -> Capsule -> Motion
-makeMotion duration v3s c = Motion
-  { _mProgress   = 0
-  , _mPath       = bezier $ _capPos c : v3s
-  , _mSpeedMult  = 1 / duration
-  , _mAfterwards = Nothing
-  }
+makeMotion duration v3s c = motion
+                          . runBezier duration v3s
+                          $ _capPos c
 
 moveTo :: Time -> [V3] -> Capsule -> Capsule
-moveTo duration v3s = setMotion (makeMotion duration v3s)
+moveTo duration v3s = flip setMotionwtf (makeMotion duration v3s)
 
-setMotion :: (Capsule -> Motion) -> Capsule -> Capsule
-setMotion m c = c & capMotion .~ Just (m c)
+setMotionwtf :: Capsule -> (Capsule -> Motion) -> Capsule
+setMotionwtf c m = c & capMotion .~ Just (m c)
 
-after :: Time -> [V3] -> Capsule -> Capsule
-after duration v3s c =
-  c & capMotion .~ Just (
-    case _capMotion c of
-      Just m  -> go m
-      Nothing -> motion c
-    )
-  where
-    motion = makeMotion duration v3s
-    go :: Motion -> Motion
-    go m =
-      case _mAfterwards m of
-        Just m' -> m & mAfterwards .~ Just (fmap go m')
-        Nothing -> m & mAfterwards .~ Just motion
+setMotion :: Capsule -> Motion -> Capsule
+setMotion c m = c & capMotion .~ Just m
 
