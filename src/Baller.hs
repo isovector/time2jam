@@ -114,6 +114,8 @@ shoot net c@Capsule {..} =
                , netCtrlPt
                , netPos'
                ] c
+    & mAfterwards .~
+      Just (makeMotion 0.2 [ netPos' & yPos .~ 0 ])
   where
     -- TODO(sandy): make this less copy-paste
     dunkHeight = 3

@@ -46,14 +46,17 @@ updateBall dt hit ballers shoot b@Ball{..} =
         Just (Shoot m) -> setMotion m
         _              -> id
 
+    hasMotion = isJust $ view capMotion _ballCap
+
     state' =
-      case (_ballState, hit, shoot) of
-        (BallUnowned, Just x, _)          -> BallOwned x
-        (BallUnowned, Nothing, _)         -> BallUnowned
-        (BallOwned x, _, Nothing)         -> BallOwned x
-        (BallOwned x, _, Just (Shoot _))  -> BallShoot x
-        (BallShoot x, Just y, _) | x /= y -> BallOwned y
-        (BallShoot x, _, _)               -> BallShoot x
+      case (_ballState, hit, shoot, hasMotion) of
+        (BallUnowned, Just x, _, _)          -> BallOwned x
+        (BallUnowned, Nothing, _, _)         -> BallUnowned
+        (BallOwned x, _, Nothing, _)         -> BallOwned x
+        (BallOwned x, _, Just (Shoot _), _)  -> BallShoot x
+        (BallShoot x, Just y, _, _) | x /= y -> BallOwned y
+        (BallShoot x, _, _, True)            -> BallShoot x
+        (BallShoot _, _, _, False)           -> BallUnowned
 
     pos' = maybe (b ^. ballCap.capPos)
                  (view (bCap.capPos) . (ballers !!))
