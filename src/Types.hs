@@ -98,10 +98,10 @@ data Possession = Has
                 deriving (Eq, Show, Ord, Bounded, Enum)
 
 data BallerState = BSDefault
-                 | BSJumping
-                 | BSShooting
+                 | BSJumping Possession
                  | BSGrounded
-                 deriving (Eq, Show, Ord, Bounded)
+                 deriving (Eq, Show, Ord)
+makePrisms ''BallerState
 
 data Baller = Baller
   { _bCap   :: Capsule

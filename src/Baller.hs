@@ -69,34 +69,23 @@ updateBaller dt ctrl kp p b@Baller{..} = do
          $ moveCapsule (scaleRel dt velocity) _bCap
 
     canJump = kp == Just JumpKP
-           && _bState /= BSJumping
-           && _bState /= BSShooting
+           && isn't _BSJumping _bState
            && not hasMotion
 
     canShoot = kp == Just ShootKP
-            && ( _bState == BSShooting
-              || _bState == BSJumping
-               )
+            && has _BSJumping _bState
             && p == Has
 
     state' =
-      -- TODO(sandy): this could be hella simplified if we knew whether they
-      -- had the ball when left the ground
-      case (_bState, p, hasMotion, canJump, canShoot) of
-        (BSJumping,  _,      False, _,     _    ) -> BSDefault
-        (BSShooting, Has,    False, _,     _    ) -> BSGrounded
-        (BSShooting, Doesnt, False, _,     _    ) -> BSDefault
-        (BSGrounded, Doesnt, False, _,     _    ) -> BSDefault
-        (bs,         _,      True,  _,     False) -> bs
-        (_,          Has,    False, True,  _    ) -> BSShooting
-        (_,          Doesnt, False, True,  _    ) -> BSJumping
-        (BSGrounded, Has,    False, False, _    ) -> BSGrounded
-        (BSDefault,  _,      False, False, _    ) -> BSDefault
-        (BSShooting, Has,    True,  _,     True ) -> BSJumping
-        (BSJumping,  _,      _,     _,     True ) -> BSJumping
-        (BSGrounded, _,      _,     _,     True ) -> error "tried to shoot while grounded"
-        (BSDefault,  _,      _,     _,     True ) -> error "tried to shoot while default"
-        (BSShooting, Doesnt, _,     _,     True ) -> error "tried to shoot without ball"
+      case (_bState, p, hasMotion, canJump) of
+        (BSJumping Has,    Has,    False, _)     -> BSGrounded
+        (BSJumping Doesnt, Has,    _,     _)     -> BSJumping Doesnt
+        (BSJumping _,      Doesnt, False, _)     -> BSDefault
+        (BSGrounded,       Doesnt, False, _)     -> BSDefault
+        (bs,               _,      True,  _)     -> bs
+        (_,                pos,    False, True)  -> BSJumping pos
+        (BSGrounded,       Has,    False, False) -> BSGrounded
+        (BSDefault,        _,      False, False) -> BSDefault
 
     motion' = bool id jumpAction canJump
     actions = bool [] [Shoot $ shoot _bFwd] canShoot
