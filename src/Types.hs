@@ -112,16 +112,15 @@ data Baller = Baller
   } deriving (Eq, Show)
 makeLenses ''Baller
 
-data BallState = BallDefault
-               | BallShoot
-               | BallRebound
-               | BallPassed
-               deriving (Eq, Show, Ord, Bounded)
+data BallState = BallUnowned
+               | BallOwned Int
+               | BallShoot Int -- ^ Shooter.
+               deriving (Eq, Show)
+makePrisms ''BallState
 
 data Ball = Ball
   { _ballCap   :: Capsule
   , _ballState :: BallState
-  , _ballOwner :: Maybe Int
   } deriving (Eq, Show)
 makeLenses ''Ball
 

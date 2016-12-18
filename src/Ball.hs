@@ -14,9 +14,8 @@ import Types
 
 defaultBall :: Ball
 defaultBall = Ball
-  { _ballCap = ballCapsule
-  , _ballState = BallDefault
-  , _ballOwner = Nothing
+  { _ballCap   = ballCapsule
+  , _ballState = BallUnowned
   }
 
 ballCapsule :: Capsule
@@ -35,10 +34,11 @@ updateBall :: Time
            -> Ball
            -> Ball
 updateBall dt hit ballers shoot b@Ball{..} =
-    b { _ballOwner = owner'
-      , _ballCap = updateCapsule dt . motion' $ _ballCap
-        { _capPos = pos'
-        }
+    b { _ballCap = updateCapsule dt
+                 . motion'
+                 . (capPos .~ pos')
+                 $ _ballCap
+      , _ballState = state'
       }
   where
     motion' =
@@ -46,10 +46,18 @@ updateBall dt hit ballers shoot b@Ball{..} =
         Just (Shoot m) -> setMotion m
         _              -> id
 
-    owner' = bool (_ballOwner <|> hit) Nothing $ isJust shoot
-    pos' = maybe (view (ballCap.capPos) b)
+    state' =
+      case (_ballState, hit, shoot) of
+        (BallUnowned, Just x, _)          -> BallOwned x
+        (BallUnowned, Nothing, _)         -> BallUnowned
+        (BallOwned x, _, Nothing)         -> BallOwned x
+        (BallOwned x, _, Just (Shoot _))  -> BallShoot x
+        (BallShoot x, Just y, _) | x /= y -> BallOwned y
+        (BallShoot x, _, _)               -> BallShoot x
+
+    pos' = maybe (b ^. ballCap.capPos)
                  (view (bCap.capPos) . (ballers !!))
-                 owner'
+                 $ preview _BallOwned state'
 
 orange :: Color
 orange = rgb 0.98 0.51 0.13

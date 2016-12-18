@@ -78,7 +78,7 @@ updateGame dt ctrl kp Game{..} =
  where
    possesses i = maybe Doesnt
                        (bool Doesnt Has . (== i))
-                       $ _ballOwner _gBall
+                       $ preview (ballState._BallOwned) _gBall
 
 magic :: Engine -> N (B Prop)
 magic _ = do
@@ -104,7 +104,7 @@ magic _ = do
            , drawBasket cam LNet
            , drawBall cam
                       now
-                      (flip ownerToBaller g <$> _ballOwner _gBall)
+                      (flip ownerToBaller g <$> preview (ballState._BallOwned) _gBall)
                       _gBall
            , drawBaller cam _gBaller0
            ]
