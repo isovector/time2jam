@@ -44,9 +44,10 @@ updateBall dt hit ballers shoot b@Ball{..} = do
                }
   where
     motion' =
-      case shoot of
-        Just (Shoot m) -> flip setMotionwtf m
-        _              -> id
+      case (shoot, killMotion) of
+        (Just (Shoot m), _) -> flip setMotionwtf m
+        (_,  True)          -> capMotion .~ Nothing
+        _                   -> id
 
     hasMotion = isJust $ view capMotion _ballCap
 
@@ -60,6 +61,9 @@ updateBall dt hit ballers shoot b@Ball{..} = do
         (BallShoot x, Just y, _, _) | x /= y -> BallOwned y
         (BallShoot x, _, _, True)            -> BallShoot x
         (BallShoot _, _, _, False)           -> BallUnowned
+
+    killMotion = has _BallOwned state'
+              && state' /= _ballState
 
     pos' = maybe (b ^. ballCap.capPos)
                  (view (bCap.capPos) . (ballers !!))

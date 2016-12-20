@@ -68,7 +68,14 @@ data Keypress = JumpKP
               | PassKP
               deriving (Show, Eq, Ord)
 
+data Shove = ShoveData
+               V3
+               Rel3
+               Double  -- ^ Distance
+               Double  -- ^ Force
+
 data Action = Shoot (Capsule -> Motion)
+            | Shove Shove
             | Debug String
 
 type Machine a = Coroutine (Request V3 Double) (Writer [Action]) a
@@ -89,6 +96,7 @@ data Capsule = Capsule
   } deriving (Eq, Show)
 
 makePrisms ''Action
+makePrisms ''Shove
 makePrisms ''Motion
 makeLenses ''Capsule
 

@@ -10,7 +10,7 @@ import Capsule
 import Control.Lens
 import Data.Bool (bool)
 import Data.Maybe (isJust)
-import Data.SG.Geometry.ThreeDim (yPos)
+import Data.SG.Geometry.ThreeDim (xPos, yPos)
 import Game.Sequoia
 import Game.Sequoia.Color
 import Input
@@ -31,6 +31,15 @@ defaultBaller = Baller
   { _bCap   = ballerCapsule
   , _bColor = rgb 0.67 0 0.47
   , _bFwd   = RNet
+  , _bDir   = rel3 0 0 0
+  , _bState = BSDefault
+  }
+
+otherBaller :: Baller
+otherBaller = Baller
+  { _bCap   = ballerCapsule & capPos.xPos .~ 1
+  , _bColor = rgb 0.67 0 0.47
+  , _bFwd   = LNet
   , _bDir   = rel3 0 0 0
   , _bState = BSDefault
   }
@@ -78,6 +87,10 @@ updateBaller dt ctrl kp p b@Baller{..} = do
             && has _BSJumping _bState
             && p == Has
 
+    canShove = kp == Just PassKP
+            && has _BSDefault _bState
+            && p == Doesnt
+
     state' =
       case (_bState, p, hasMotion, canJump) of
         (BSJumping Has,    Has,    False, _)     -> BSGrounded
@@ -90,7 +103,10 @@ updateBaller dt ctrl kp p b@Baller{..} = do
         (BSDefault,        _,      False, False) -> BSDefault
 
     motion' = bool id jumpAction canJump
-    actions = bool [] [Shoot $ shoot _bFwd] canShoot
+    actions = [Shoot $ shoot _bFwd
+              | canShoot]
+           ++ [Shove $ ShoveData (b ^. bCap.capPos) velocity 1 1
+              | canShove]
 
 jump :: Double -> Rel3 -> Capsule -> Capsule
 jump jumpHeight velocity c@Capsule{..} =
@@ -163,4 +179,21 @@ drawBaller cam b =
     height = negate $ 135 * size
     shadowWidth = 80 * size
     shadowHeight = 30 * size
+
+
+doShove :: [Shove] -> [GObject] -> [GObject]
+doShove shoves objs = do
+  obj <- objs
+  let hits = join . forM shoves $ \shove -> do
+        let (pos, dir, dist, force) = view _ShoveData shove
+            dpos = posDif (obj ^. objCap.capPos) pos
+        guard $ dot dpos dir > 0.75
+        guard $ mag dpos <= dist
+        return $ scaleRel force dpos
+
+      forces = mconcat hits
+  return $ obj
+         & objCap.capPos .~
+              (flip plusDir forces $ obj ^. objCap.capPos)
+
 

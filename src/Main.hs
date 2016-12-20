@@ -32,6 +32,7 @@ data Game = Game
   { _gCamera  :: Camera
   , _gBall    :: Ball
   , _gBaller0 :: Baller
+  , _gBaller1 :: Baller
   }
 makeLenses ''Game
 
@@ -40,10 +41,12 @@ initGame = Game
   { _gCamera  = def
   , _gBall    = defaultBall
   , _gBaller0 = defaultBaller
+  , _gBaller1 = otherBaller
   }
 
 ownerToBaller :: Int -> Game -> Baller
 ownerToBaller 0 = _gBaller0
+ownerToBaller 1 = _gBaller1
 ownerToBaller _ = error "update ownerToBaller"
 
 duplicate :: [(a, a)] -> [(a, a)]
@@ -57,17 +60,21 @@ updateGame :: Time
 updateGame dt ctrl kp Game{..} = do
   let (baller0, baller0Acts) =
         runWriter $ updateBaller dt ctrl kp (possesses 0) _gBaller0
-      ballerActs = baller0Acts
+      (baller1, baller1Acts) =
+        runWriter $ updateBaller dt def Nothing (possesses 1) _gBaller1
+      ballerActs = baller0Acts ++ baller1Acts
       shotAction = find (has _Shoot) ballerActs
 
       ([ BallObj ball
        , BallerObj _ baller0'
+       , BallerObj _ baller1'
        ], hits
        ) = resolveCapsules objCap
              [ BallObj _gBall
              , BallerObj 0 baller0
+             , BallerObj 1 baller1
              ]
-      ballers = [baller0']
+      ballers = [baller0', baller1']
       camera' = updateCam dt
               $ _gCamera
               & camFocus .~ view (ballCap . capPos) ball'
@@ -83,8 +90,18 @@ updateGame dt ctrl kp Game{..} = do
                      ball
       allActs = ballerActs ++ ballActs
 
+      ([ BallObj ball''
+       , BallerObj _ baller0''
+       , BallerObj _ baller1''
+       ]) = doShove
+              (mapMaybe (preview _Shove) ballerActs)
+              [ BallObj ball'
+              , BallerObj 0 baller0'
+              , BallerObj 1 baller1'
+              ]
+
   tell $ mapMaybe (preview _Debug) allActs
-  return $ Game camera' ball' baller0'
+  return $ Game camera' ball'' baller0'' baller1''
  where
    possesses i = maybe Doesnt
                        (bool Doesnt Has . (== i))
@@ -120,6 +137,7 @@ magic _ = do
                       (flip ownerToBaller g <$> preview (ballState._BallOwned) _gBall)
                       _gBall
            , drawBaller cam _gBaller0
+           , drawBaller cam _gBaller1
            ]
 
 
