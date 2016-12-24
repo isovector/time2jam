@@ -105,7 +105,7 @@ updateBaller dt ctrl kp p b@Baller{..} = do
     motion' = bool id jumpAction canJump
     actions = [Shoot $ shoot _bFwd
               | canShoot]
-           ++ [Shove $ ShoveData (b ^. bCap.capPos) velocity 1 1
+           ++ [Shove $ ShoveData (b ^. bCap.capPos) velocity 1 2
               | canShove]
 
 jump :: Double -> Rel3 -> Capsule -> Capsule
@@ -192,8 +192,11 @@ doShove shoves objs = do
         return $ scaleRel force dpos
 
       forces = mconcat hits
-  return $ obj
-         & objCap.capPos .~
-              (flip plusDir forces $ obj ^. objCap.capPos)
 
-
+  case forces /= 0 of
+    True ->
+      return $ flip (over objCap) obj
+            $ \c -> setMotion c . motion $ do
+              let pos = c ^. capPos
+              runBezier 0.15 [plusDir pos forces] pos
+    False -> return obj
