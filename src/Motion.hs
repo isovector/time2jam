@@ -25,8 +25,17 @@ runBezier duration v3s pos = do
          True  -> return ()
          False -> loop b (dt + t)
 
+velBezier :: Double -> [V3] -> V3 -> Machine V3
+velBezier velocity v3s pos = runBezier (bezierDuration velocity v3s pos) v3s pos
+
+bezierDuration :: Double -> [V3] -> V3 -> Time
+bezierDuration velocity v3s pos =
+    let len = bezierLength $ pos : v3s
+     in len / velocity
+
 runMotion :: Time -> Motion -> Writer [Action] (V3, Maybe Motion)
 runMotion dt (Motion m) = (resume $ m dt) >>= \case
   Left (Request v3 c) -> return (v3, Just $ Motion c)
   Right v3            -> return (v3, Nothing)
+
 

@@ -81,8 +81,11 @@ updateBall dt hit ballers action b@Ball{..} = do
           owner = ballers !! ownerId
           teammateId = complementBit ownerId 0
           teammate@Baller{..} = ballers !! teammateId
-          passTime = 0.5
-      runBezier passTime
+          passVelocity = 30
+          -- TODO(sandy): this is crap -- do some calculus to figure out when
+          -- the ball will intersect with the baller
+          passTime = 0.1
+      velBezier passVelocity
                 [plusDir (_capPos _bCap)
                          ( scaleRel passTime _bDir
                          + ballerBallHeight teammate

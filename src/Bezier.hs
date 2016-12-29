@@ -3,6 +3,7 @@ module Bezier where
 
 import Control.Monad (zipWithM)
 import Data.SG.Vector
+import Game.Sequoia (distance)
 import Types
 
 type Point = [Float]  -- a multi-dimensional coordinate
@@ -26,4 +27,10 @@ bezier' ps  = do p <- bezier' (init ps)
 
 bezier :: [V3] -> Double -> V3
 bezier = (fromComponents .) . bezier' . fmap getComponents
+
+bezierLength :: [V3] -> Double
+bezierLength v3s = sum $ fmap (uncurry distance) $ zip samples (drop 1 samples)
+  where
+    curve = bezier v3s
+    samples = fmap (curve $) . take 101 $ iterate (+0.01) 0
 

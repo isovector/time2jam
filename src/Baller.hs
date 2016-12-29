@@ -121,15 +121,17 @@ jump jumpHeight velocity c@Capsule{..} =
 
 shoot :: Net -> Capsule -> Motion
 shoot net Capsule {..} = motion $ do
-    a <- runBezier 1 [ jumpCtrlPt
-                     , netCtrlPt
-                     , netPos'
-                     ] _capPos
+    a <- velBezier ballVelocity
+            [ jumpCtrlPt
+            , netCtrlPt
+            , netPos'
+            ] _capPos
     lift $ tell [Debug "two points!"]
     b <- runBezier 0.2 [ netPos' & yPos .~ 0 ] a
     lift $ tell [TurnOver net]
     return b
   where
+    ballVelocity = 15
     -- TODO(sandy): make this less copy-paste
     dunkHeight = 3
     dunkCtrl = scaleRel dunkHeight unitY
