@@ -193,10 +193,17 @@ doShove shoves objs = do
 
       forces = mconcat hits
 
-  case forces /= 0 of
-    True ->
+  case (forces, obj) of
+    (0, _) -> return obj
+
+    (_, BallerObj _ _) ->
+      return $ flip (over objCap) obj
+             $ \c -> setMotion c . motion $ do
+               let pos = c ^. capPos
+               runBezier 0.15 [plusDir pos forces] pos
+
+    (_, BallObj _) ->
       return $ flip (over objCap) obj
             $ \c -> setMotion c . motion $ do
               let pos = c ^. capPos
               runBezier 0.15 [plusDir pos forces] pos
-    False -> return obj
