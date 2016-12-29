@@ -1,32 +1,26 @@
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE LambdaCase      #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Input where
 
-import Data.Default
 import Game.Sequoia
 import Game.Sequoia.Keyboard
 import Types
 
-data Controller = Controller
-  { _ctrlDir   :: Rel
-  , _ctrlShoot :: Bool
-  , _ctrlPass  :: Bool
-  , _ctrlTurbo :: Bool
-  }
-
-instance Default Controller where
-  def = Controller (rel 0 0) False False False
-
-keyboardController :: B [Key] -> B Controller
+keyboardController :: B [Key] -> B RawController
 keyboardController keys =
-  Controller <$> wasd keys
+  RawController <$> wasd keys
              <*> isDown keys EKey
              <*> isDown keys FKey
              <*> isDown keys LeftShiftKey
 
-getKP :: Controller -> Controller -> Maybe Keypress
-getKP (Controller _ False _ _) (Controller _ True _ _)  = Just JumpKP
-getKP (Controller _ True _ _)  (Controller _ False _ _) = Just ShootKP
-getKP (Controller _ _ False _) (Controller _ _ True _)  = Just PassKP
-getKP _                        _                        = Nothing
+foldController :: RawController -> RawController -> Controller
+foldController old new@RawController{..} = Controller _rctrlDir _rctrlTurbo
+                                         $ getKP old new
+
+getKP :: RawController -> RawController -> Maybe Keypress
+getKP (RawController _ False _ _) (RawController _ True _ _)  = Just JumpKP
+getKP (RawController _ True _ _)  (RawController _ False _ _) = Just ShootKP
+getKP (RawController _ _ False _) (RawController _ _ True _)  = Just PassKP
+getKP _                            _                          = Nothing
 

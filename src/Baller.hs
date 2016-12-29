@@ -13,7 +13,6 @@ import Data.Maybe (isJust)
 import Data.SG.Geometry.ThreeDim (xPos, yPos)
 import Game.Sequoia
 import Game.Sequoia.Color
-import Input
 import Motion
 import Types
 
@@ -46,11 +45,10 @@ otherBaller = Baller
 
 updateBaller :: Time
              -> Controller
-             -> Maybe Keypress
              -> Possession
              -> Baller
              -> Writer [Action] Baller
-updateBaller dt ctrl kp p b@Baller{..} = do
+updateBaller dt ctrl p b@Baller{..} = do
   tell actions
   newCap <- cap'
   return $
@@ -79,6 +77,7 @@ updateBaller dt ctrl kp p b@Baller{..} = do
          . motion'
          $ moveCapsule (scaleRel dt velocity) _bCap
 
+    kp = _ctrlAction ctrl
     canJump = kp == Just JumpKP
            && isn't _BSJumping _bState
            && not hasMotion

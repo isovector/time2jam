@@ -6,6 +6,7 @@ import Control.Lens
 import Control.Monad.Coroutine
 import Control.Monad.Coroutine.SuspensionFunctors
 import Control.Monad.Writer (Writer)
+import Data.Default
 import Data.Maybe (isJust)
 import Data.SG.Geometry.ThreeDim
 import Data.SG.Vector as V
@@ -67,6 +68,22 @@ data Keypress = JumpKP
               | ShootKP
               | PassKP
               deriving (Show, Eq, Ord)
+
+data RawController = RawController
+  { _rctrlDir   :: Rel
+  , _rctrlShoot :: Bool
+  , _rctrlPass  :: Bool
+  , _rctrlTurbo :: Bool
+  }
+
+data Controller = Controller
+  { _ctrlDir    :: Rel
+  , _ctrlTurbo  :: Bool
+  , _ctrlAction :: Maybe Keypress
+  }
+
+instance Default RawController where
+  def = RawController (rel 0 0) False False False
 
 data Shove = ShoveData
                V3
