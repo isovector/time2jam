@@ -21,7 +21,7 @@ makeLenses ''Camera
 instance Default Camera where
   def = Camera (mkV3 0 0 0)
                (mkV3 0 0 0)
-               100
+               50
                (courtGfxDepth / courtDepth)
                (courtGfxLength / courtLength)
 
