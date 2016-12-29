@@ -90,6 +90,9 @@ updateBaller dt ctrl p b@Baller{..} = do
             && has _BSDefault _bState
             && p == Doesnt
 
+    canPass = kp == Just PassKP
+           && p == Has
+
     state' =
       case (_bState, p, hasMotion, canJump) of
         (BSJumping Has,    Has,    False, _)     -> BSGrounded
@@ -106,6 +109,8 @@ updateBaller dt ctrl p b@Baller{..} = do
               | canShoot]
            ++ [Shove $ ShoveData (b ^. bCap.capPos) velocity 1 2
               | canShove]
+           ++ [Pass
+              | canPass]
 
 jump :: Double -> Rel3 -> Capsule -> Capsule
 jump jumpHeight velocity c@Capsule{..} =
@@ -208,3 +213,7 @@ doShove shoves objs = do
             $ \c -> setMotion c . motion $ do
               let pos = c ^. capPos
               runBezier 0.15 [plusDir pos forces] pos
+
+ballerBallHeight :: Baller -> Rel3
+ballerBallHeight b = scaleRel (b ^. bCap.capHeight / 2) unitY
+

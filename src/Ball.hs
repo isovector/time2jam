@@ -1,16 +1,20 @@
+{-# LANGUAGE NamedFieldPuns  #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module Ball where
 
+import Baller
 import Camera
 import Capsule
 import Control.Lens
 import Control.Monad.Writer (Writer)
+import Data.Bits (complementBit)
 import Data.Bool (bool)
 import Data.Maybe (isJust)
 import Data.SG.Geometry.ThreeDim
 import Game.Sequoia
 import Game.Sequoia.Color
+import Motion
 import Types
 
 defaultBall :: Ball
@@ -34,7 +38,7 @@ updateBall :: Time
            -> Maybe Action
            -> Ball
            -> Writer [Action] Ball
-updateBall dt hit ballers shoot b@Ball{..} = do
+updateBall dt hit ballers action b@Ball{..} = do
     cap' <- updateCapsule dt
           . motion'
           . (capPos .~ pos')
@@ -44,19 +48,21 @@ updateBall dt hit ballers shoot b@Ball{..} = do
                }
   where
     motion' =
-      case (shoot, killMotion) of
+      case (action, killMotion) of
         (Just (Shoot m), _) -> flip setMotionwtf m
+        (Just Pass, _)      -> flip setMotionwtf doPass
         (_,  True)          -> capMotion .~ Nothing
         _                   -> id
 
     hasMotion = isJust $ view capMotion _ballCap
 
     state' =
-      case (_ballState, hit, shoot, hasMotion) of
+      case (_ballState, hit, action, hasMotion) of
         (BallUnowned, Just x, _, _)          -> BallOwned x
         (BallUnowned, Nothing, _, _)         -> BallUnowned
         (BallOwned x, _, Nothing, _)         -> BallOwned x
         (BallOwned x, _, Just (Shoot _), _)  -> BallShoot x
+        (BallOwned x, _, Just Pass, _)       -> BallShoot x
         (BallOwned x, _, Just _, _)          -> BallOwned x
         (BallShoot x, Just y, _, _) | x /= y -> BallOwned y
         (BallShoot x, _, _, True)            -> BallShoot x
@@ -68,6 +74,21 @@ updateBall dt hit ballers shoot b@Ball{..} = do
     pos' = maybe (b ^. ballCap.capPos)
                  (view (bCap.capPos) . (ballers !!))
                  $ preview _BallOwned state'
+
+    doPass c = motion $ do
+      let ownerId = maybe (error "impossible -- no owner") id
+                  $ preview (ballState._BallOwned) b
+          owner = ballers !! ownerId
+          teammateId = complementBit ownerId 0
+          teammate@Baller{..} = ballers !! teammateId
+          passTime = 0.5
+      runBezier passTime
+                [plusDir (_capPos _bCap)
+                         ( scaleRel passTime _bDir
+                         + ballerBallHeight teammate
+                         )
+                ] $ plusDir (_capPos c) (ballerBallHeight owner)
+
 
 orange :: Color
 orange = rgb 0.98 0.51 0.13

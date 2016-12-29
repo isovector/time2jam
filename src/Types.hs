@@ -95,6 +95,7 @@ data Action = Shoot (Capsule -> Motion)
             | Shove Shove
             | Debug String
             | TurnOver Net
+            | Pass
 
 type Machine a = Coroutine (Request V3 Double) (Writer [Action]) a
 newtype Motion = Motion (Time -> Machine V3)

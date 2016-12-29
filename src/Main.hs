@@ -14,7 +14,7 @@ import Camera
 import Capsule
 import Control.FRPNow.Time (delayTime)
 import Control.Lens
-import Control.Monad (join, forM_, forM)
+import Control.Monad (join, forM_, forM, liftM2)
 import Control.Monad.Writer (Writer, runWriter, tell)
 import Control.Monad.IO.Class (liftIO)
 import Court
@@ -72,7 +72,7 @@ updateGame dt ctrls g = do
   let (ballers, ballerActs) = runWriter
                             $ forM (zip3 (_gBallers g) ctrls [0..]) $ \(baller, ctrl, n) ->
                                 updateBaller dt ctrl (possesses n) baller
-      shotAction = find (has _Shoot) ballerActs
+      shotAction = find (liftM2 (||) (has _Shoot) (has _Pass)) ballerActs
 
       (hits, g') = withObjects (g & gBallers .~ ballers)
                                (swap <$> resolveCapsules objCap)
