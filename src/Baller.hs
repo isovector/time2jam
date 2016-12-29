@@ -3,12 +3,13 @@
 
 module Baller where
 
-import Control.Monad.Writer
 import Basket
 import Camera
 import Capsule
 import Control.Lens
+import Control.Monad.Writer
 import Data.Bool (bool)
+import Data.Default (def)
 import Data.Maybe (isJust)
 import Data.SG.Geometry.ThreeDim (yPos)
 import Game.Sequoia
@@ -29,6 +30,7 @@ defaultBaller :: Baller
 defaultBaller = Baller
   { _bCap   = ballerCapsule
   , _bColor = rgb 0.67 0 0.47
+  , _bStats = def
   , _bFwd   = RNet
   , _bDir   = rel3 0 0 0
   , _bState = BSDefault
@@ -38,6 +40,7 @@ otherBaller :: Baller
 otherBaller = Baller
   { _bCap   = ballerCapsule
   , _bColor = rgb 0.47 0 0.67
+  , _bStats = def
   , _bFwd   = LNet
   , _bDir   = rel3 0 0 0
   , _bState = BSDefault
@@ -57,12 +60,15 @@ updateBaller dt ctrl p b@Baller{..} = do
       , _bState = state'
       }
   where
-    speed = case (_bState, _ctrlTurbo ctrl) of
-              (BSDefault, True)  -> 1.5
-              (BSDefault, False) -> 1
-              (_, _)             -> 0
+    speed =
+      let baseSpeed = _bStats ^. sSpeed
+          speedMult = _bStats ^. sTurboMult
+      in case (_bState, _ctrlTurbo ctrl) of
+           (BSDefault, True)  -> baseSpeed * speedMult
+           (BSDefault, False) -> baseSpeed
+           (_, _)             -> 0
 
-    dx = scaleRel (5 * speed) $ _ctrlDir ctrl
+    dx = scaleRel speed $ _ctrlDir ctrl
     velocity  = rel3 (getX dx) 0 (getY dx)
     hasMotion = isJust $ view capMotion _bCap
     jumpAction = bool (jump 1.5 velocity)

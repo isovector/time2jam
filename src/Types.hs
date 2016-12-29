@@ -129,9 +129,19 @@ data BallerState = BSDefault
                  deriving (Eq, Show, Ord)
 makePrisms ''BallerState
 
+data Stats = Stats
+  { _sSpeed :: Double
+  , _sTurboMult :: Double
+  } deriving (Eq, Show)
+
+instance Default Stats where
+  def = Stats 5 1.5
+makeLenses ''Stats
+
 data Baller = Baller
   { _bCap   :: Capsule
   , _bColor :: Color
+  , _bStats :: Stats
   , _bFwd   :: Net
   , _bDir   :: Rel3
   , _bState :: BallerState

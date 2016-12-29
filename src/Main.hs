@@ -103,7 +103,9 @@ updateGame dt ctrls g = do
         ballers' = do
           (baller, i) <- zip (_gBallers g'') [0..]
           return $ baller & bCap.capMotion .~ Just (
-            motion $ runBezier 1
+            motion $ velBezier ( baller ^. bStats.sSpeed
+                               * baller ^. bStats.sTurboMult
+                               )
                    [ (bool turnoverDefPos
                            turnoverOffPos
                            $ isOff baller
