@@ -10,7 +10,7 @@ import Capsule
 import Control.Lens
 import Data.Bool (bool)
 import Data.Maybe (isJust)
-import Data.SG.Geometry.ThreeDim (xPos, yPos)
+import Data.SG.Geometry.ThreeDim (yPos)
 import Game.Sequoia
 import Game.Sequoia.Color
 import Motion
@@ -36,8 +36,8 @@ defaultBaller = Baller
 
 otherBaller :: Baller
 otherBaller = Baller
-  { _bCap   = ballerCapsule & capPos.xPos .~ 1
-  , _bColor = rgb 0.67 0 0.47
+  { _bCap   = ballerCapsule
+  , _bColor = rgb 0.47 0 0.67
   , _bFwd   = LNet
   , _bDir   = rel3 0 0 0
   , _bState = BSDefault
@@ -121,7 +121,9 @@ shoot net Capsule {..} = motion $ do
                      , netPos'
                      ] _capPos
     lift $ tell [Debug "two points!"]
-    runBezier 0.2 [ netPos' & yPos .~ 0 ] a
+    b <- runBezier 0.2 [ netPos' & yPos .~ 0 ] a
+    lift $ tell [TurnOver net]
+    return b
   where
     -- TODO(sandy): make this less copy-paste
     dunkHeight = 3

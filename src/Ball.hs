@@ -21,7 +21,7 @@ defaultBall = Ball
 
 ballCapsule :: Capsule
 ballCapsule = Capsule
-  { _capPos      = mkV3 1.5 0 0
+  { _capPos      = mkV3 0 0 0
   , _capRadius   = 0.2
   , _capHeight   = 0.2
   , _capEthereal = True

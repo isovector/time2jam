@@ -20,12 +20,13 @@ import Control.Monad.IO.Class (liftIO)
 import Court
 import Data.Bool (bool)
 import Data.Default
-import Data.List (find)
+import Data.List (find, partition)
 import Data.Maybe (listToMaybe, mapMaybe)
 import Data.Tuple (swap)
 import Game.Sequoia
 import Game.Sequoia.Keyboard
 import Input
+import Motion
 import Types
 
 data Game = Game
@@ -39,8 +40,10 @@ initGame :: Game
 initGame = Game
   { _gCamera  = def
   , _gBall    = defaultBall
-  , _gBallers = [ defaultBaller
-                , otherBaller
+  , _gBallers = [ defaultBaller & bCap.capPos .~ mkV3 2 0 (-2)
+                , defaultBaller & bCap.capPos .~ mkV3 2 0 2
+                , otherBaller & bCap.capPos .~ mkV3 (-2) 0 2
+                , otherBaller & bCap.capPos .~ mkV3 (-2) 0 (-2)
                 ]
   }
 
@@ -89,12 +92,30 @@ updateGame dt ctrls g = do
                      ball
       allActs = ballerActs ++ ballActs
 
-      g'' = runIdentity $ withObjects (g' & gBall .~ ball')
-                        (Identity . doShove (mapMaybe (preview _Shove) ballerActs))
+      g'' = runIdentity $ withObjects (g' & gBall .~ ball'
+                                          & gCamera .~ camera')
+                        (Identity . doShove (getActions ballerActs _Shove))
 
-  tell $ mapMaybe (preview _Debug) allActs
-  return $ g'' & gCamera .~ camera'
+  handleActions allActs _Debug (tell . return)
+  return $ onAction allActs _TurnOver g'' $ \net ->
+    let (off, _) = partition ((== net) . view bFwd) $ _gBallers g''
+        isOff = flip elem off
+        ballers' = do
+          (baller, i) <- zip (_gBallers g'') [0..]
+          return $ baller & bCap.capMotion .~ Just (
+            motion $ runBezier 1
+                   [ (bool turnoverDefPos
+                           turnoverOffPos
+                           $ isOff baller
+                     ) (i `mod` 2) net
+                   ] $ baller ^. bCap.capPos
+            )
+     in g'' & gBallers .~ ballers'
+
  where
+   getActions acts p = mapMaybe (preview p) acts
+   handleActions acts p f = forM (getActions acts p) f
+   onAction acts p g_ f = maybe g_ f . listToMaybe $ getActions acts p
    possesses i = maybe Doesnt
                        (bool Doesnt Has . (== i))
                        $ preview (ballState._BallOwned) $ _gBall g
@@ -113,6 +134,8 @@ magic _ = do
       let ctrl = foldController rctrl rctrl'
       let (game', msgs) = runWriter
                         $ updateGame dt [ ctrl
+                                        , Controller (rel 0 0) False Nothing
+                                        , Controller (rel 0 0) False Nothing
                                         , Controller (rel 0 0) False Nothing
                                         ] g
       liftIO $ forM_ msgs putStrLn

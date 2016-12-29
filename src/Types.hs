@@ -61,8 +61,8 @@ zero = rel3 0 0 0
 data Net = LNet | RNet deriving (Eq, Show, Ord, Bounded, Enum)
 
 netDirection :: Net -> Rel3
-netDirection LNet = unitX
-netDirection RNet = -unitX
+netDirection LNet = -unitX
+netDirection RNet = unitX
 
 data Keypress = JumpKP
               | ShootKP
@@ -74,13 +74,13 @@ data RawController = RawController
   , _rctrlShoot :: Bool
   , _rctrlPass  :: Bool
   , _rctrlTurbo :: Bool
-  }
+  } deriving (Eq, Show)
 
 data Controller = Controller
   { _ctrlDir    :: Rel
   , _ctrlTurbo  :: Bool
   , _ctrlAction :: Maybe Keypress
-  }
+  } deriving (Eq, Show)
 
 instance Default RawController where
   def = RawController (rel 0 0) False False False
@@ -94,6 +94,7 @@ data Shove = ShoveData
 data Action = Shoot (Capsule -> Motion)
             | Shove Shove
             | Debug String
+            | TurnOver Net
 
 type Machine a = Coroutine (Request V3 Double) (Writer [Action]) a
 newtype Motion = Motion (Time -> Machine V3)
