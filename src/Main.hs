@@ -120,6 +120,11 @@ updateGame dt ctrls g = do
                        (bool Doesnt Has . (== i))
                        $ preview (ballState._BallOwned) $ _gBall g
 
+setAt :: [a] -> Int -> a -> [a]
+setAt [] _ _      = []
+setAt (_:as) 0 a' = a':as
+setAt (a:as) n a' = a : setAt as (n-1) a'
+
 magic :: Engine -> N (B Prop)
 magic _ = do
   clock      <- getClock
@@ -132,12 +137,11 @@ magic _ = do
       rctrl  <- sample oldCtrl
       rctrl' <- sample controller
       let ctrl = foldController rctrl rctrl'
-      let (game', msgs) = runWriter
-                        $ updateGame dt [ ctrl
-                                        , Controller (rel 0 0) False Nothing
-                                        , Controller (rel 0 0) False Nothing
-                                        , Controller (rel 0 0) False Nothing
-                                        ] g
+          controllers = setAt (replicate 4 $ Controller (rel 0 0) False Nothing)
+                              (maybe 0 id $ preview (gBall.ballState._BallOwned) g)
+                              ctrl
+          (game', msgs) = runWriter
+                        $ updateGame dt controllers g
       liftIO $ forM_ msgs putStrLn
       return game'
 
