@@ -13,17 +13,18 @@ data Court = Court
   }
 
 court :: Court
-court = Court (mkV3 (-width) 0 (-depth))
-              (mkV3   width  0 (-depth))
-              (mkV3 (-width) 0   depth)
-              (mkV3   width  0   depth)
+court = Court (V3 (-width) 0 (-depth))
+              (V3   width  0 (-depth))
+              (V3 (-width) 0   depth)
+              (V3   width  0   depth)
   where
     width = courtLength / 2
     depth = courtDepth / 2
 
-drawCourt :: Court -> Camera -> Prop
-drawCourt c cam = filled (rgb 1 0.67 0.47)
-                . toPoly (toScreen cam $ mkV3 0 0 0)
+drawCourt :: Court -> Camera -> Form
+drawCourt c cam = move (toScreen cam $ V3 0 0 0)
+                . filled (rgb 1 0.67 0.47)
+                . toPoly (toScreen cam $ V3 0 0 0)
                 $ fmap (toScreen cam)
                 [ _courtTopLeft  c
                 , _courtTopRight c

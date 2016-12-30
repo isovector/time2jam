@@ -14,18 +14,14 @@ import Camera
 import Capsule
 import Control.FRPNow.Time (delayTime)
 import Control.Lens
-import Control.Monad (join, forM_, forM, liftM2)
 import Control.Monad.Writer (Writer, runWriter, tell)
-import Control.Monad.IO.Class (liftIO)
 import Court
-import Data.Bool (bool)
-import Data.Default
+import Game.Sequoia.Keyboard
 import Data.List (find, partition)
 import Data.Maybe (listToMaybe, mapMaybe)
 import Data.Tuple (swap)
-import Game.Sequoia
-import Game.Sequoia.Keyboard
 import Input
+import JamPrelude
 import Motion
 import Types
 
@@ -40,10 +36,10 @@ initGame :: Game
 initGame = Game
   { _gCamera  = def
   , _gBall    = defaultBall
-  , _gBallers = [ defaultBaller & bCap.capPos .~ mkV3 2 0 (-2)
-                , defaultBaller & bCap.capPos .~ mkV3 2 0 2
-                , otherBaller & bCap.capPos .~ mkV3 (-2) 0 2
-                , otherBaller & bCap.capPos .~ mkV3 (-2) 0 (-2)
+  , _gBallers = [ defaultBaller & bCap.capPos .~ V3 2 0 (-2)
+                , defaultBaller & bCap.capPos .~ V3 2 0 2
+                , otherBaller & bCap.capPos .~ V3 (-2) 0 2
+                , otherBaller & bCap.capPos .~ V3 (-2) 0 (-2)
                 ]
   }
 
@@ -127,7 +123,7 @@ setAt [] _ _      = []
 setAt (_:as) 0 a' = a':as
 setAt (a:as) n a' = a : setAt as (n-1) a'
 
-magic :: Engine -> N (B Prop)
+magic :: Engine -> N (B Element)
 magic _ = do
   clock      <- getClock
   controller <- keyboardController <$> getKeyboard
@@ -139,7 +135,7 @@ magic _ = do
       rctrl  <- sample oldCtrl
       rctrl' <- sample controller
       let ctrl = foldController rctrl rctrl'
-          controllers = setAt (replicate 4 $ Controller (rel 0 0) False Nothing)
+          controllers = setAt (replicate 4 $ Controller (V2 0 0) False Nothing)
                               (maybe 0 id $ preview (gBall.ballState._BallOwned) g)
                               ctrl
           (game', msgs) = runWriter
@@ -152,7 +148,7 @@ magic _ = do
     let cam = _gCamera
     now <- sample $ totalTime clock
 
-    return $ group $
+    return $ centeredCollage 700 400 $
            [ drawCourt court cam
            , drawBasket cam RNet
            , drawBasket cam LNet

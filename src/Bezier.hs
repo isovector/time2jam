@@ -2,8 +2,7 @@
 module Bezier where
 
 import Control.Monad (zipWithM)
-import Data.SG.Vector
-import Game.Sequoia (distance)
+import JamPrelude
 import Types
 
 type Point = [Float]  -- a multi-dimensional coordinate
@@ -27,6 +26,12 @@ bezier' ps  = do p <- bezier' (init ps)
 
 bezier :: [V3] -> Double -> V3
 bezier = (fromComponents .) . bezier' . fmap getComponents
+
+getComponents :: V3 -> [Double]
+getComponents (V3 x y z) = [x, y, z]
+
+fromComponents :: [Double] -> V3
+fromComponents [x, y, z] = V3 x y z
 
 bezierLength :: [V3] -> Double
 bezierLength v3s = sum $ fmap (uncurry distance) $ zip samples (drop 1 samples)

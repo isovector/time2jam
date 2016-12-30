@@ -6,20 +6,18 @@ module Baller where
 import Basket
 import Camera
 import Capsule
-import Control.Lens
 import Control.Monad.Writer
 import Data.Bool (bool)
 import Data.Default (def)
 import Data.Maybe (isJust)
-import Data.SG.Geometry.ThreeDim (yPos)
-import Game.Sequoia
 import Game.Sequoia.Color
+import JamPrelude
 import Motion
 import Types
 
 ballerCapsule :: Capsule
 ballerCapsule = Capsule
-  { _capPos      = mkV3 0 0 0
+  { _capPos      = V3 0 0 0
   , _capRadius   = 0.75
   , _capHeight   = 2
   , _capEthereal = False
@@ -32,7 +30,7 @@ defaultBaller = Baller
   , _bColor = rgb 0.67 0 0.47
   , _bStats = def
   , _bFwd   = RNet
-  , _bDir   = rel3 0 0 0
+  , _bDir   = V3 0 0 0
   , _bState = BSDefault
   }
 
@@ -42,7 +40,7 @@ otherBaller = Baller
   , _bColor = rgb 0.47 0 0.67
   , _bStats = def
   , _bFwd   = LNet
-  , _bDir   = rel3 0 0 0
+  , _bDir   = V3 0 0 0
   , _bState = BSDefault
   }
 
@@ -68,20 +66,20 @@ updateBaller dt ctrl p b@Baller{..} = do
            (BSDefault, False) -> baseSpeed
            (_, _)             -> 0
 
-    dx = scaleRel speed $ _ctrlDir ctrl
-    velocity  = rel3 (getX dx) 0 (getY dx)
+    dx = (*^) speed $ _ctrlDir ctrl
+    velocity  = V3 (view _x dx) 0 (view _y dx)
     hasMotion = isJust $ view capMotion _bCap
     jumpAction = bool (jump 1.5 velocity)
                       (dunk _bFwd)
                       shouldDunk
     shouldDunk = (&& _ctrlTurbo ctrl)
                . (> 0)
-               $ dot velocity (posDif (netPos _bFwd)
+               $ dot velocity ((-) (netPos _bFwd)
                                     $ _capPos _bCap)
 
     cap' = updateCapsule dt
          . motion'
-         $ moveCapsule (scaleRel dt velocity) _bCap
+         $ moveCapsule ((*^) dt velocity) _bCap
 
     kp = _ctrlAction ctrl
     canJump = kp == Just JumpKP
@@ -118,11 +116,11 @@ updateBaller dt ctrl p b@Baller{..} = do
            ++ [Pass
               | canPass]
 
-jump :: Double -> Rel3 -> Capsule -> Capsule
+jump :: Double -> V3 -> Capsule -> Capsule
 jump jumpHeight velocity c@Capsule{..} =
-  moveTo 1 [ plusDir _capPos $ scaleRel (2 * jumpHeight) unitY
-                             + scaleRel 0.5 velocity
-            , plusDir _capPos velocity
+  moveTo 1 [ (+) _capPos $ (*^) (2 * jumpHeight) unitY
+                             + (*^) 0.5 velocity
+            , (+) _capPos velocity
             ] c
 
 shoot :: Net -> Capsule -> Motion
@@ -133,22 +131,22 @@ shoot net Capsule {..} = motion $ do
             , netPos'
             ] _capPos
     lift $ tell [Debug "two points!"]
-    b <- runBezier 0.2 [ netPos' & yPos .~ 0 ] a
+    b <- runBezier 0.2 [ netPos' & _y .~ 0 ] a
     lift $ tell [TurnOver net]
     return b
   where
     ballVelocity = 15
     -- TODO(sandy): make this less copy-paste
     dunkHeight = 3
-    dunkCtrl = scaleRel dunkHeight unitY
-    netDir = let (x, _, z) = unpackRel3 $ posDif netPos' _capPos
-              in normalize $ rel3 x 0 z
-    jumpCtrlPt = add (scaleRel (view yPos netPos') unitY)
+    dunkCtrl = (*^) dunkHeight unitY
+    netDir = let (x, _, z) = unpackV3 $ (-) netPos' _capPos
+              in signorm $ V3 x 0 z
+    jumpCtrlPt = add ((*^) (view _y netPos') unitY)
                . add netDir
                $ add dunkCtrl _capPos
     netCtrlPt = add (negate netDir) $ add dunkCtrl netPos'
     netPos' = netPos net
-    add = flip plusDir
+    add = flip (+)
 
 dunk :: Net -> Capsule -> Capsule
 dunk net c@Capsule{..} = setMotion c . motion $ do
@@ -156,38 +154,39 @@ dunk net c@Capsule{..} = setMotion c . motion $ do
                   , netCtrlPt
                   , netPos'
                   ] _capPos
-     >>= runBezier 0.3 [ netPos' & yPos .~ 0 ]
+     >>= runBezier 0.3 [ netPos' & _y .~ 0 ]
   where
     dunkHeight = 3
-    dunkCtrl = scaleRel dunkHeight unitY
-    netDir = let (x, _, z) = unpackRel3 $ posDif netPos' _capPos
-              in normalize $ rel3 x 0 z
-    jumpCtrlPt = add (scaleRel (view yPos netPos') unitY)
+    dunkCtrl = (*^) dunkHeight unitY
+    netDir = let (x, _, z) = unpackV3 $ (-) netPos' _capPos
+              in signorm $ V3 x 0 z
+    jumpCtrlPt = add ((*^) (view _y netPos') unitY)
                . add netDir
                $ add dunkCtrl _capPos
-    netCtrlPt = add (scaleRel 2 netDir) $ add dunkCtrl netPos'
+    netCtrlPt = add ((*^) 2 netDir) $ add dunkCtrl netPos'
     netPos' = netPos net
-    add = flip plusDir
+    add = flip (+)
 
 
 
-drawBaller :: Camera -> Baller -> Prop
+drawBaller :: Camera -> Baller -> Form
 drawBaller cam b =
-  group [ traced black
-          $ ellipse (toScreen cam shadowPos)
-                    shadowWidth
-                    shadowHeight
-        , traced (_bColor b)
-          $ polygon (toScreen cam pos)
-            [ rel (-width) 0
-            , rel (-width) height
-            , rel   width  height
-            , rel   width 0
+  group [ move (toScreen cam shadowPos)
+          . traced' black
+          $ oval shadowWidth
+                 shadowHeight
+        , move (toScreen cam pos)
+          . traced' (_bColor b)
+          $ polygon
+            [ V2 (-width) 0
+            , V2 (-width) height
+            , V2   width  height
+            , V2   width 0
             ]
         ]
   where
     pos = b ^. bCap . capPos
-    shadowPos = pos & yPos .~ 0
+    shadowPos = pos & _y .~ 0
     size = depthMod cam pos
     width = 50 * size / 2
     height = negate $ 135 * size
@@ -200,12 +199,12 @@ doShove shoves objs = do
   obj <- objs
   let hits = join . forM shoves $ \shove -> do
         let (pos, dir, dist, force) = view _ShoveData shove
-            dpos = posDif (obj ^. objCap.capPos) pos
+            dpos = (-) (obj ^. objCap.capPos) pos
         guard $ dot dpos dir > 0.75
-        guard $ mag dpos <= dist
-        return $ scaleRel force dpos
+        guard $ norm dpos <= dist
+        return $ (*^) force dpos
 
-      forces = mconcat hits
+      forces = sum hits
 
   case (forces, obj) of
     (0, _) -> return obj
@@ -214,14 +213,14 @@ doShove shoves objs = do
       return $ flip (over objCap) obj
              $ \c -> setMotion c . motion $ do
                let pos = c ^. capPos
-               runBezier 0.15 [plusDir pos forces] pos
+               runBezier 0.15 [(+) pos forces] pos
 
     (_, BallObj _) ->
       return $ flip (over objCap) obj
             $ \c -> setMotion c . motion $ do
               let pos = c ^. capPos
-              runBezier 0.15 [plusDir pos forces] pos
+              runBezier 0.15 [(+) pos forces] pos
 
-ballerBallHeight :: Baller -> Rel3
-ballerBallHeight b = scaleRel (b ^. bCap.capHeight / 2) unitY
+ballerBallHeight :: Baller -> V3
+ballerBallHeight b = (*^) (b ^. bCap.capHeight / 2) unitY
 

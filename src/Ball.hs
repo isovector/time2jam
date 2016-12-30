@@ -6,14 +6,12 @@ module Ball where
 import Baller
 import Camera
 import Capsule
-import Control.Lens
 import Control.Monad.Writer (Writer)
 import Data.Bits (complementBit)
 import Data.Bool (bool)
 import Data.Maybe (isJust)
-import Data.SG.Geometry.ThreeDim
-import Game.Sequoia
 import Game.Sequoia.Color
+import JamPrelude
 import Motion
 import Types
 
@@ -25,7 +23,7 @@ defaultBall = Ball
 
 ballCapsule :: Capsule
 ballCapsule = Capsule
-  { _capPos      = mkV3 0 0 0
+  { _capPos      = V3 0 0 0
   , _capRadius   = 0.2
   , _capHeight   = 0.2
   , _capEthereal = True
@@ -86,34 +84,36 @@ updateBall dt hit ballers action b@Ball{..} = do
           -- the ball will intersect with the baller
           passTime = 0.1
       velBezier passVelocity
-                [plusDir (_capPos _bCap)
-                         ( scaleRel passTime _bDir
+                [(+) (_capPos _bCap)
+                         ( (*^) passTime _bDir
                          + ballerBallHeight teammate
                          )
-                ] $ plusDir (_capPos c) (ballerBallHeight owner)
+                ] $ (+) (_capPos c) (ballerBallHeight owner)
 
 
 orange :: Color
 orange = rgb 0.98 0.51 0.13
 
-drawBall :: Camera -> Time -> Maybe Baller -> Ball -> Prop
+drawBall :: Camera -> Time -> Maybe Baller -> Ball -> Form
 drawBall cam when owner ball =
-    group [ filled black
-            $ circle (toScreen cam shadowPos) shadowRadius
-          , styled orange lineStyle
-            $ circle (toScreen cam pos) radius
+    group [ move (toScreen cam shadowPos)
+            . filled black
+            $ circle shadowRadius
+          , move (toScreen cam pos)
+            . filled orange
+            $ circle radius
           ]
   where
-    lineStyle = defaultLine { lineWidth = 2 }
-    pos       = plusDir (ball ^. ballCap.capPos) $ bool dpos zero hasMotion
+    -- lineStyle = defaultLine { lineWidth = 2 }
+    pos       = (+) (ball ^. ballCap.capPos) $ bool dpos zero hasMotion
     hasMotion = isJust $ ball ^. ballCap.capMotion
     dpos      = case isJust . view (bCap.capMotion) <$> owner of
                   Just True  -> unitY
                   Just False -> dribble
                   Nothing    -> zero
-    dribble   = scaleRel ((/2) $ sin (when * 9) + 1) unitY
+    dribble   = (*^) ((/2) $ sin (when * 9) + 1) unitY
     radius    = 10 * depthMod cam pos
 
-    shadowPos    = yPos .~ 0 $ pos
+    shadowPos    = _y .~ 0 $ pos
     shadowRadius = 10 * depthMod cam pos
 

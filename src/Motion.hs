@@ -4,8 +4,8 @@
 module Motion where
 
 import Types
+import Game.Sequoia
 import Bezier
-import Game.Sequoia (Time)
 import Control.Monad.Writer
 import Control.Monad.Coroutine
 import Control.Monad.Coroutine.SuspensionFunctors

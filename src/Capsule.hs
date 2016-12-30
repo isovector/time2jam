@@ -5,21 +5,20 @@
 
 module Capsule where
 
-import Control.Arrow (second)
 import Control.Comonad
 import Control.Comonad.Store
 import Control.Lens
 import Control.Monad.Writer
 import Data.List (nub)
 import Data.Maybe (isJust)
-import Game.Sequoia
 import Motion
+import JamPrelude
 import Types
 
-moveCapsule :: Rel3 -> Capsule -> Capsule
-moveCapsule r3 = capPos %~ flip plusDir r3
+moveCapsule :: V3 -> Capsule -> Capsule
+moveCapsule r3 = capPos %~ flip (+) r3
 
-capsuleIntersection :: Capsule -> Capsule -> Maybe Rel3
+capsuleIntersection :: Capsule -> Capsule -> Maybe V3
 capsuleIntersection a b =
     if (d <= _capRadius a || d <= _capRadius b)
        then Just dif
@@ -27,8 +26,8 @@ capsuleIntersection a b =
   where
     (ax, _, az) = unpackV3 $ _capPos a
     (bx, _, bz) = unpackV3 $ _capPos b
-    dif = posDif (_capPos b) (_capPos a)
-    d = mag $ posDif (mkPos ax az) (mkPos bx bz)
+    dif = (-) (_capPos b) (_capPos a)
+    d = norm $ (-) (V2 ax az) (V2 bx bz)
 
 checkCapsules :: Capsule -> Capsule -> Bool
 checkCapsules a b = isJust (capsuleIntersection a b)
@@ -36,8 +35,8 @@ checkCapsules a b = isJust (capsuleIntersection a b)
                    || (by >= ay && by < ay + _capHeight a)
                     )
   where
-    ay = getY $ _capPos a
-    by = getY $ _capPos b
+    ay = a ^. capPos._y
+    by = b ^. capPos._y
 
 
 stepPos :: Ord s
@@ -47,8 +46,8 @@ stepPos :: Ord s
 stepPos as w = do
   tell ids
   pure . flip moveCapsule cap
-       . mconcat
-       $ fmap (scaleRel mult) forces
+       . sum
+       $ fmap ((*^) mult) forces
   where
     cap = extract w
     loc = _capPos cap
@@ -56,7 +55,7 @@ stepPos as w = do
     isMovable = not $ _capEthereal cap || isJust (_capMotion cap)
     forces =
       if isMovable
-         then fmap (normalize . posDif loc . _capPos . snd)
+         then fmap (signorm . (-) loc . _capPos . snd)
                     realInts
          else []
     ints = filter (checkCapsules cap . snd)

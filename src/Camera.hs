@@ -4,10 +4,8 @@
 module Camera where
 
 import Data.Default
-import Control.Lens
-import Game.Sequoia
 import Constants
-import Types
+import JamPrelude
 
 data Camera = Camera
   { _camFocus :: V3
@@ -19,30 +17,30 @@ data Camera = Camera
 makeLenses ''Camera
 
 instance Default Camera where
-  def = Camera (mkV3 0 0 0)
-               (mkV3 0 0 0)
+  def = Camera (V3 0 0 0)
+               (V3 0 0 0)
                50
                (courtGfxDepth / courtDepth)
                (courtGfxLength / courtLength)
 
-moveCamera :: Rel3 -> Camera -> Camera
-moveCamera dx = camFocus %~ flip plusDir dx
+moveCamera :: V3 -> Camera -> Camera
+moveCamera dx = camFocus %~ (+ dx)
 
 heightScaling :: Double
 heightScaling = 75
 
 
-toScreen :: Camera -> V3 -> Pos
-toScreen cam@(Camera {..}) world = mkPos x y
+toScreen :: Camera -> V3 -> V2
+toScreen cam@(Camera {..}) world = V2 x y
   where
-    local = posDif world _camPos
+    local = (-) world _camPos
     dmod = depthMod cam world
-    x = getX local * _camWidthMult * dmod
-    y = getZ local * _camDepthMult
-      - getY local * heightScaling * dmod
+    x = view _x local * _camWidthMult * dmod
+    y = view _z local * _camDepthMult
+      - view _y local * heightScaling * dmod
 
 depthMod :: Camera -> V3 -> Double
-depthMod cam world = 1 / ((getZ (_camPos cam) - getZ world) / courtDepth + 1.5)
+depthMod cam world = 1 / ((view _z (_camPos cam) - view _z world) / courtDepth + 1.5)
 
 updateCam :: Double -> Camera -> Camera
 updateCam delta cam@(Camera {..}) =
@@ -50,6 +48,6 @@ updateCam delta cam@(Camera {..}) =
        then cam'
        else cam
   where
-    cam' = cam { _camPos = plusDir _camPos dir  }
-    dir = scaleRel (delta * 2) $ posDif _camFocus _camPos
+    cam' = cam { _camPos = (+) _camPos dir  }
+    dir = (*^) (delta * 2) $ _camFocus - _camPos
 

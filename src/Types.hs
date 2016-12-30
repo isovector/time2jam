@@ -1,4 +1,6 @@
-{-# LANGUAGE TemplateHaskell           #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE PatternSynonyms  #-}
+{-# LANGUAGE TemplateHaskell  #-}
 
 module Types where
 
@@ -8,59 +10,26 @@ import Control.Monad.Coroutine.SuspensionFunctors
 import Control.Monad.Writer (Writer)
 import Data.Default
 import Data.Maybe (isJust)
-import Data.SG.Geometry.ThreeDim
-import Data.SG.Vector as V
-import Game.Sequoia (Time)
-import Game.Sequoia.Scene
-import Game.Sequoia.Types
+import Game.Sequoia
 
-type V3 = Point3' Double
-type Rel3 = Rel3' Double
-type Prop = Prop' ()
+toPoly :: V2 -> [V2] -> Shape
+toPoly x = polygon . fmap (flip (-) x)
 
+unitX :: V3
+unitX = V3 1 0 0
 
-unpackV3 :: V3 -> (Double, Double, Double)
-unpackV3 (Point3 x y z) = (x, y, z)
+unitY :: V3
+unitY = V3 0 1 0
 
-unpackRel3 :: Rel3 -> (Double, Double, Double)
-unpackRel3 (Rel3 (x, y, z) _) = (x, y, z)
+unitZ :: V3
+unitZ = V3 0 0 1
 
-mkV3 :: Double -> Double -> Double -> V3
-mkV3 = Point3
-
-rel3 :: Double -> Double -> Double -> Rel3
-rel3 x y z = makeRel3 (x, y, z)
-
-toPoly :: Pos -> [Pos] -> Shape
-toPoly x = polygon x . fmap (flip posDif x)
-
-ellipse :: Pos -> Double -> Double -> Shape
-ellipse p w h = polygon p
-              $ fmap (rad2rel . (* drad) . fromIntegral) [0..samples]
-  where
-    samples = 15 :: Int
-    drad = 2 * pi / fromIntegral samples
-    rad2rel :: Double -> Rel
-    rad2rel rad = rel (cos rad * w / 2) (sin rad * h / 2)
-
-getZ :: Coord3 p => p a -> a
-getZ = V.getZ
-
-unitX :: Rel3
-unitX = rel3 1 0 0
-
-unitY :: Rel3
-unitY = rel3 0 1 0
-
-unitZ :: Rel3
-unitZ = rel3 0 0 1
-
-zero :: Rel3
-zero = rel3 0 0 0
+zero :: V3
+zero = V3 0 0 0
 
 data Net = LNet | RNet deriving (Eq, Show, Ord, Bounded, Enum)
 
-netDirection :: Net -> Rel3
+netDirection :: Net -> V3
 netDirection LNet = -unitX
 netDirection RNet = unitX
 
@@ -70,24 +39,24 @@ data Keypress = JumpKP
               deriving (Show, Eq, Ord)
 
 data RawController = RawController
-  { _rctrlDir   :: Rel
+  { _rctrlDir   :: V2
   , _rctrlShoot :: Bool
   , _rctrlPass  :: Bool
   , _rctrlTurbo :: Bool
   } deriving (Eq, Show)
 
 data Controller = Controller
-  { _ctrlDir    :: Rel
+  { _ctrlDir    :: V2
   , _ctrlTurbo  :: Bool
   , _ctrlAction :: Maybe Keypress
   } deriving (Eq, Show)
 
 instance Default RawController where
-  def = RawController (rel 0 0) False False False
+  def = RawController (V2 0 0) False False False
 
 data Shove = ShoveData
                V3
-               Rel3
+               V3
                Double  -- ^ Distance
                Double  -- ^ Force
 
@@ -143,7 +112,7 @@ data Baller = Baller
   , _bColor :: Color
   , _bStats :: Stats
   , _bFwd   :: Net
-  , _bDir   :: Rel3
+  , _bDir   :: V3
   , _bState :: BallerState
   } deriving (Eq, Show)
 makeLenses ''Baller
