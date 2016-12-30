@@ -7,6 +7,7 @@
 
 module Main where
 
+import Art
 import Ball
 import Baller
 import Basket
@@ -128,6 +129,7 @@ magic _ = do
   clock      <- getClock
   controller <- keyboardController <$> getKeyboard
   oldCtrl    <- sample $ delayTime (deltaTime clock) def controller
+  schema     <- getArt
 
   (game, _) <-
     foldmp initGame $ \g -> do
@@ -147,6 +149,12 @@ magic _ = do
     g@Game {..} <- sample game
     let cam = _gCamera
     now <- sample $ totalTime clock
+    let skel = move (V2 (-40) (-150))
+             . toForm
+             . centeredCollage 80 300
+             . return
+             $ scale 0.2
+             $ doAnimation schema $ ((round $ now * 100) `mod` 300)
 
     return $ centeredCollage 700 400 $
            [ drawCourt court cam
@@ -157,6 +165,7 @@ magic _ = do
                       (flip ownerToBaller g
                           <$> preview (ballState._BallOwned) _gBall)
                       _gBall
+           , move (toScreen cam $ V3 10 0 (-5)) skel
            ] ++ fmap (drawBaller cam) _gBallers
 
 
