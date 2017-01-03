@@ -9,9 +9,10 @@ import Constants
 import JamPrelude
 
 data Camera = Camera
-  { _camFocus :: V3
-  , _camPos :: V3
-  , _camDeadzone :: Double
+  { _camFocus     :: V3
+  , _camPos       :: V3
+  , _camSpeed     :: Double
+  , _camDeadzone  :: Double
   , _camDepthMult :: Double
   , _camWidthMult :: Double
   }
@@ -20,6 +21,7 @@ makeLenses ''Camera
 instance Default Camera where
   def = Camera (V3 0 0 0)
                (V3 0 0 0)
+               3
                50
                (courtGfxDepth / courtDepth)
                (courtGfxLength / courtLength)
@@ -50,5 +52,5 @@ updateCam delta cam@(Camera {..}) =
        else cam
   where
     cam' = cam { _camPos = _camPos + dir  }
-    dir = delta * 2 *^ (_camFocus - _camPos)
+    dir = delta * _camSpeed *^ (_camFocus - _camPos)
 
