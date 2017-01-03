@@ -4,6 +4,7 @@ module JamPrelude
   , isJust
   , (*^), (^*)
   , module Game.Sequoia
+  , module Types
   , first, second
   , join, forM, forM_, liftM2
   , liftIO
@@ -20,4 +21,5 @@ import Linear.Vector ((*^), (^*))
 import Control.Monad.IO.Class (liftIO)
 import Data.Bool (bool)
 import Game.Sequoia
+import Types
 

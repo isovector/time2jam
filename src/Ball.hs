@@ -13,7 +13,6 @@ import Data.Maybe (isJust)
 import Game.Sequoia.Color
 import JamPrelude
 import Motion
-import Types
 
 defaultBall :: Ball
 defaultBall = Ball
@@ -84,11 +83,9 @@ updateBall dt hit ballers action b@Ball{..} = do
           -- the ball will intersect with the baller
           passTime = 0.1
       velBezier passVelocity
-                [(+) (_capPos _bCap)
-                         ( (*^) passTime _bDir
-                         + ballerBallHeight teammate
-                         )
-                ] $ (+) (_capPos c) (ballerBallHeight owner)
+                [_capPos _bCap
+                  + (passTime *^ _bDir + ballerBallHeight teammate)
+                ] $ _capPos c + ballerBallHeight owner
 
 
 orange :: Color
@@ -105,13 +102,13 @@ drawBall cam when owner ball =
           ]
   where
     -- lineStyle = defaultLine { lineWidth = 2 }
-    pos       = (+) (ball ^. ballCap.capPos) $ bool dpos zero hasMotion
+    pos       = ball ^. ballCap.capPos + bool dpos zero hasMotion
     hasMotion = isJust $ ball ^. ballCap.capMotion
     dpos      = case isJust . view (bCap.capMotion) <$> owner of
                   Just True  -> unitY
                   Just False -> dribble
                   Nothing    -> zero
-    dribble   = (*^) ((/2) $ sin (when * 9) + 1) unitY
+    dribble   = ((/2) $ sin (when * 9) + 1) *^ unitY
     radius    = 10 * depthMod cam pos
 
     shadowPos    = _y .~ 0 $ pos

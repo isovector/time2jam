@@ -34,7 +34,7 @@ doAnimation schema frame =
 
 getArt :: Now Schema
 getArt = do
-    Just json <- liftIO $ decode . toS <$> readFile "art/walk.json"
+    Just json <- liftIO $ decode . toS <$> readFile "art/skinned.scon"
     let Success schema = fromJSON json
     return schema
 

@@ -24,7 +24,6 @@ import Data.Tuple (swap)
 import Input
 import JamPrelude
 import Motion
-import Types
 
 data Game = Game
   { _gCamera  :: Camera

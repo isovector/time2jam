@@ -3,6 +3,7 @@
 
 module Camera where
 
+import Control.Lens ((+~))
 import Data.Default
 import Constants
 import JamPrelude
@@ -24,7 +25,7 @@ instance Default Camera where
                (courtGfxLength / courtLength)
 
 moveCamera :: V3 -> Camera -> Camera
-moveCamera dx = camFocus %~ (+ dx)
+moveCamera dx = camFocus +~ dx
 
 heightScaling :: Double
 heightScaling = 75
@@ -33,7 +34,7 @@ heightScaling = 75
 toScreen :: Camera -> V3 -> V2
 toScreen cam@(Camera {..}) world = V2 x y
   where
-    local = (-) world _camPos
+    local = world - _camPos
     dmod = depthMod cam world
     x = view _x local * _camWidthMult * dmod
     y = view _z local * _camDepthMult
@@ -48,6 +49,6 @@ updateCam delta cam@(Camera {..}) =
        then cam'
        else cam
   where
-    cam' = cam { _camPos = (+) _camPos dir  }
-    dir = (*^) (delta * 2) $ _camFocus - _camPos
+    cam' = cam { _camPos = _camPos + dir  }
+    dir = delta * 2 *^ (_camFocus - _camPos)
 

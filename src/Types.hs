@@ -13,7 +13,7 @@ import Data.Maybe (isJust)
 import Game.Sequoia
 
 toPoly :: V2 -> [V2] -> Shape
-toPoly x = polygon . fmap (flip (-) x)
+toPoly x = polygon . fmap (subtract x)
 
 unitX :: V3
 unitX = V3 1 0 0
