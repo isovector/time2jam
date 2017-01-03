@@ -52,7 +52,7 @@ updateBaller dt ctrl p b@Baller{..} = do
   tell actions
   newCap <- cap'
   return $
-    b { _bCap = newCap
+    b { _bCap = clampToGround newCap
       , _bDir = velocity
       , _bState = state'
       }
@@ -74,6 +74,8 @@ updateBaller dt ctrl p b@Baller{..} = do
     shouldDunk = (&& _ctrlTurbo ctrl)
                . (> 0)
                $ dot velocity (netPos _bFwd - _capPos _bCap)
+
+    clampToGround = bool (capPos._y .~ 0) id hasMotion
 
     cap' = updateCapsule dt
          . motion'
