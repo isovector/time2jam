@@ -92,7 +92,10 @@ updateGame dt ctrls g = do
                                           & gCamera .~ camera')
                         (Identity . doShove (getActions ballerActs _Shove))
 
-  handleActions allActs _Debug (tell . return)
+  handleActions allActs _Debug $ tell . return
+  handleActions allActs _Point $ \(n, p) ->
+    tell . pure $ show p <> " points for " <> show n
+
   return $ onAction allActs _TurnOver g'' $ \net ->
     let (off, _) = partition ((== net) . view bFwd) $ _gBallers g''
         isOff = flip elem off

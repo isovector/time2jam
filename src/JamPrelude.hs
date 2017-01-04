@@ -3,6 +3,7 @@ module JamPrelude
   , def
   , isJust
   , (*^), (^*)
+  , (<>)
   , module Game.Sequoia
   , module Types
   , first, second
@@ -13,13 +14,14 @@ module JamPrelude
 
 import Control.Arrow
 import Control.Lens
-import Linear.Metric (distance, norm, signorm, dot)
 import Control.Monad
-import Data.Default
-import Data.Maybe (isJust)
-import Linear.Vector ((*^), (^*))
 import Control.Monad.IO.Class (liftIO)
 import Data.Bool (bool)
+import Data.Default
+import Data.Maybe (isJust)
+import Data.Monoid ((<>))
 import Game.Sequoia
+import Linear.Metric (distance, norm, signorm, dot)
+import Linear.Vector ((*^), (^*))
 import Types
 

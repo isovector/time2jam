@@ -27,11 +27,17 @@ unitZ = V3 0 0 1
 zero :: V3
 zero = V3 0 0 0
 
-data Net = LNet | RNet deriving (Eq, Show, Ord, Bounded, Enum)
+data Net = LNet
+         | RNet
+         deriving (Eq, Show, Ord, Bounded, Enum)
 
 netDirection :: Net -> V3
 netDirection LNet = -unitX
 netDirection RNet = unitX
+
+otherNet :: Net -> Net
+otherNet LNet = RNet
+otherNet RNet = LNet
 
 data Keypress = JumpKP
               | ShootKP
@@ -63,6 +69,7 @@ data Shove = ShoveData
 data Action = Shoot (Capsule -> Motion)
             | Shove Shove
             | Debug String
+            | Point Net Int
             | TurnOver Net
             | Pass
 

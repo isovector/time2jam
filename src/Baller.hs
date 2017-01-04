@@ -6,6 +6,7 @@ module Baller where
 import Basket
 import Camera
 import Capsule
+import Constants
 import Control.Monad.Writer
 import Data.Bool (bool)
 import Data.Default (def)
@@ -126,12 +127,13 @@ jump jumpHeight velocity c@Capsule{..} =
 
 shoot :: Net -> Capsule -> Motion
 shoot net Capsule {..} = motion $ do
+    let dist = norm $ (_capPos & _y .~ 0) - basketGroundPos net
     a <- velBezier ballVelocity
             [ jumpCtrlPt
             , netCtrlPt
             , netPos'
             ] _capPos
-    lift $ tell [Debug "two points!"]
+    lift $ tell [Point (otherNet net) . bool 2 3 $ dist >= courtLongRadius]
     b <- runBezier 0.2 [ netPos' & _y .~ 0 ] a
     lift $ tell [TurnOver net]
     return b
