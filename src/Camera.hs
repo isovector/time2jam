@@ -7,6 +7,15 @@ import Control.Lens ((+~))
 import Data.Default
 import Constants
 import JamPrelude
+import Linear.Projection
+import Linear.Matrix
+import Linear.V4
+import Game.Sequoia.Utils
+
+projection :: M44 Double
+projection = perspective (3 * pi / 180) (700/400) 0.1 30
+
+
 
 data Camera = Camera
   { _camFocus     :: V3
@@ -34,13 +43,13 @@ heightScaling = 75
 
 
 toScreen :: Camera -> V3 -> V2
-toScreen cam@(Camera {..}) world = V2 x y
+toScreen cam@(Camera {..}) world = V2 (v2 ^. _x) (v2 ^. _y)
   where
-    local = world - _camPos
-    dmod = depthMod cam world
-    x = view _x local * _camWidthMult * dmod
-    y = view _z local * _camDepthMult
-      - view _y local * heightScaling * dmod
+    screen = V4 (V4 1 0 0 1) (V4 0 (-1) 0 1) (V4 0 0 1 1) (V4 0 0 0 1)
+    m = lookAt (unitZ ^* 5 + unitY ^* 5) (V3 0 0 0) unitY
+    pos = identity & translation .~ -_camPos
+    v2 = (screen !*! projection !*! m !*! pos) !* V4 (world ^. _x) (world ^. _y) (world ^. _z) 1
+
 
 depthMod :: Camera -> V3 -> Double
 depthMod cam world = 1 / ((view _z (_camPos cam) - view _z world) / courtDepth + 1.5)
