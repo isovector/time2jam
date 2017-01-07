@@ -143,7 +143,7 @@ shoot net Capsule {..} = motion $ do
     dunkHeight = 3
     dunkCtrl = dunkHeight *^ unitY
     netDir = let (x, _, z) = unpackV3 $ netPos' - _capPos
-              in signorm $ V3 x 0 z
+              in signorm $ V3 x 0.0000001 z
     jumpCtrlPt = sum
                [ view _y netPos' *^ unitY
                , netDir
