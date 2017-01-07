@@ -13,14 +13,15 @@ import Baller
 import Basket
 import Camera
 import Capsule
+import Constants
 import Control.FRPNow.Time (delayTime)
 import Control.Lens
 import Control.Monad.Writer (Writer, runWriter, tell)
 import Court
-import Game.Sequoia.Keyboard
 import Data.List (find, partition)
 import Data.Maybe (listToMaybe, mapMaybe)
 import Data.Tuple (swap)
+import Game.Sequoia.Keyboard
 import Input
 import JamPrelude
 import Motion
@@ -173,6 +174,6 @@ magic _ = do
 
 main :: IO ()
 main = play config magic return
-  where config = EngineConfig (700, 400) "hello" $ rgb 0.6 0.6 0.6
+  where config = EngineConfig (round gameWidth, round gameHeight) "hello" $ rgb 0.6 0.6 0.6
 
 

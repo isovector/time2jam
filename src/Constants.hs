@@ -30,3 +30,14 @@ courtRunoff = 2
 courtLongRadius :: Double
 courtLongRadius = 7.24
 
+courtKeyWidth :: Double
+courtKeyWidth = 4.9
+
+courtKeyLength :: Double
+courtKeyLength = 5.79
+
+gameWidth :: Double
+gameWidth = 700
+
+gameHeight :: Double
+gameHeight = 400

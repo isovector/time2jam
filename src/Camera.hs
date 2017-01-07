@@ -1,5 +1,6 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE ViewPatterns    #-}
 
 module Camera where
 
@@ -10,11 +11,12 @@ import JamPrelude
 import Linear.Projection
 import Linear.Matrix
 import Linear.V4
-import Game.Sequoia.Utils
 
 projection :: M44 Double
-projection = perspective (15 * pi / 180) (700/400) 5 35
-
+projection = perspective (15 * pi / 180)
+                         (gameWidth / gameHeight)
+                         5
+                         35
 
 
 data Camera = Camera
@@ -22,8 +24,6 @@ data Camera = Camera
   , _camPos       :: V3
   , _camSpeed     :: Double
   , _camDeadzone  :: Double
-  , _camDepthMult :: Double
-  , _camWidthMult :: Double
   }
 makeLenses ''Camera
 
@@ -32,23 +32,18 @@ instance Default Camera where
                (V3 0 0 0)
                3
                50
-               (courtGfxDepth / courtDepth)
-               (courtGfxLength / courtLength)
 
 moveCamera :: V3 -> Camera -> Camera
 moveCamera dx = camFocus +~ dx
 
-heightScaling :: Double
-heightScaling = 75
-
-
 toScreen :: Camera -> V3 -> V2
-toScreen cam@(Camera {..}) world = V2 ((v2 ^. _x) * 700 / (2 * v2 ^. _z) - 175) ((v2 ^. _y) * 400 / (2 * v2 ^. _z) - 100)
+toScreen (Camera {..}) (unpackV3 -> (wx, wy, wz)) =
+    V2 ( sx * gameWidth  / (2 * sz))
+       (-sy * gameHeight / (2 * sz))
   where
-    screen = V4 (V4 1 0 0 1) (V4 0 (-1) 0 1) (V4 0 0 1 1) (V4 0 0 0 1)
-    m = lookAt (unitY ^* 15 + unitZ ^* 20) (V3 0 0 0) unitY
+    m = lookAt (V3 0 20 30) (V3 0 0 0) unitY
     pos = identity & translation .~ -_camPos
-    v2 = (screen !*! projection !*! m !*! pos) !* V4 (world ^. _x) (world ^. _y) (world ^. _z) 1
+    (V4 sx sy sz _) = (projection !*! m !*! pos) !* V4 wx wy wz 1
 
 
 depthMod :: Camera -> V3 -> Double

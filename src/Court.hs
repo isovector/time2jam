@@ -48,7 +48,26 @@ drawCourt c cam =
           . polygon
           . fmap (toScreen cam)
           $ arc3d 40 (V3 0 0 0) 1.8 0 (2 * pi) _x _z
+        , outlined' red
+          . polygon
+          $ fmap (toScreen cam)
+          [ V3 halfCourtLength 0 halfKeyWidth
+          , V3 (halfCourtLength - courtKeyLength) 0 halfKeyWidth
+          , V3 (halfCourtLength - courtKeyLength) 0 (-halfKeyWidth)
+          , V3 halfCourtLength 0 (-halfKeyWidth)
+          ]
+        , outlined' red
+          . polygon
+          $ fmap (toScreen cam)
+          [ V3 (-halfCourtLength) 0 halfKeyWidth
+          , V3 (-halfCourtLength + courtKeyLength) 0 halfKeyWidth
+          , V3 (-halfCourtLength + courtKeyLength) 0 (-halfKeyWidth)
+          , V3 (-halfCourtLength) 0 (-halfKeyWidth)
+          ]
         ]
+  where
+    halfKeyWidth = courtKeyWidth / 2
+    halfCourtLength = courtLength / 2
 
 arc3d :: Int
       -> V3
