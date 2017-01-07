@@ -1,8 +1,9 @@
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards   #-}
 
 module Art where
 
-import Control.Lens (_head)
+import Control.Lens
 import Data.Aeson (decode, fromJSON, Result (Success))
 import Data.Scientific (toRealFloat)
 import Data.Spriter.Skeleton
@@ -11,8 +12,8 @@ import Data.String.Conv (toS)
 import Game.Sequoia.Color (black)
 import JamPrelude
 
-makeBones :: Schema -> [Form]
-makeBones schema = toProp <$> schema ^. schemaEntity._head.entityObjInfo
+makeBones :: Entity -> [Form]
+makeBones entity = toProp <$> view entityObjInfo entity
   where
     toProp Bone{..} = traced' black
                     $ polygon
@@ -23,18 +24,19 @@ makeBones schema = toProp <$> schema ^. schemaEntity._head.entityObjInfo
 
 doAnimation :: Schema -> Int -> Form
 doAnimation schema frame =
-  let bones = animate (head $ schema ^. schemaEntity._head.entityAnimation)
-                      frame
+  let Just entity = schema ^. schemaEntity . at "baller"
+      Just animation = entity ^. entityAnimation . at "Run"
+      bones = animate animation frame
       drawBone ResultBone{..} = move (V2 _rbX $ -_rbY)
                               . rotate (-_rbAngle)
    in case bones of
         Just x -> group . fmap (uncurry drawBone)
-                        $ zip x (makeBones schema)
+                        $ zip x (makeBones entity)
         Nothing -> blank
 
 getArt :: Now Schema
 getArt = do
-    Just json <- liftIO $ decode . toS <$> readFile "art/walk.scon"
+    Just json <- liftIO $ decode . toS <$> readFile "art/raw/baller.scon"
     let Success schema = fromJSON json
     return schema
 

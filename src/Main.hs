@@ -156,8 +156,8 @@ magic _ = do
              . toForm
              . centeredCollage 80 300
              . return
-             $ scale 0.2
-             $ doAnimation schema $ ((round $ now * 100) `mod` 300)
+             $ scale 0.4
+             $ doAnimation schema $ ((round now * 10) `mod` 1200)
 
     return $ centeredCollage 700 400 $
            [ drawCourt court cam
