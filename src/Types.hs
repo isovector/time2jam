@@ -152,6 +152,7 @@ makePrisms ''BallState
 data Ball = Ball
   { _ballCap   :: Capsule
   , _ballState :: BallState
+  , _ballArt   :: Art
   } deriving (Eq, Show)
 makeLenses ''Ball
 

@@ -36,7 +36,7 @@ makeLenses ''Game
 initGame :: Schema -> Game
 initGame schema = Game
   { _gCamera  = def
-  , _gBall    = defaultBall
+  , _gBall    = defaultBall schema
   , _gBallers = [ defaultBaller schema & bCap.capPos .~ V3 (-2) 0 (-2)
                 , defaultBaller schema & bCap.capPos .~ V3 (-2) 0 2
                 , otherBaller schema & bCap.capPos .~ V3 2 0 2

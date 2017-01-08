@@ -193,11 +193,9 @@ drawBaller cam now b@Baller{_bArt, _bFacing} =
           $ oval (shadowWidth * shadowSize)
                  (shadowHeight * shadowSize)
         , move pos2d
-          . scale size
-          . move (V2 (-54) (-150))
-          . toForm
-          . centeredCollage 100 300
+          . group
           . return
+          . scale size
           . scale 0.3
           . flipped
           $ drawArt _bArt now

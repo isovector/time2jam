@@ -1,32 +1,21 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 {-# LANGUAGE RecordWildCards   #-}
+{-# LANGUAGE ViewPatterns      #-}
 
 module Art where
 
 import Control.Lens
 import Data.Aeson (decode, fromJSON, Result (Success))
-import Data.List (sortBy)
-import Data.Ord (comparing)
-import Data.Scientific (toRealFloat)
+import Data.Maybe (fromJust)
 import Data.Spriter.Skeleton
 import Data.Spriter.Types
 import Data.String.Conv (toS)
-import Game.Sequoia.Color (black)
 import JamPrelude
+import Data.Vector (Vector, (!), fromList)
 
-makeBones :: Entity -> [Form]
-makeBones entity = toProp <$> view entityObjInfo entity
-  where
-    toProp Bone{..} = traced' black
-                    $ polygon
-                      [ V2 0 (toRealFloat $ _boneHeight / 2)
-                      , V2 (toRealFloat _boneWidth) 0
-                      , V2 0 (toRealFloat $ (-_boneHeight) / 2)
-                      ]
-
-makeSprites :: Schema -> [Form]
-makeSprites schema = toProp
+makeSprites :: Schema -> Vector Form
+makeSprites schema = fromList $ toProp
                  <$> schema ^. schemaFolder._head.folderFile
   where
     toProp File{..} = sprite $ "art/raw/" <> _fileName
@@ -39,17 +28,15 @@ drawArt Art{..} now =
       Just animation = entity ^. entityAnimation . at _aAnim
       frame = fmod (animation ^. animLength)
                    ((now - _aStarted) * _aSpeedMult)
-      bones = animate animation frame
+      sprites = makeSprites _aSchema
       drawBone ResultBone{..} = move (V2 _rbX $ -_rbY)
                               . rotate (-_rbAngle)
                               . group
                               . return
                               . scaleXY _rbScaleX _rbScaleY
-   in case bones of
-        Just x -> group . fmap (uncurry drawBone)
-                        . zip (sortBy (comparing $ (fmap . fmap) _boneObjFile _rbObj)
-                                $ filter (not . isBone) x)
-                        $ makeSprites _aSchema
+   in case animate animation frame of
+        Just (filter (not . isBone) -> objs) ->
+          group $ fmap (\x -> drawBone x $ sprites ! (_boneObjFile . fromJust $ _rbObj x)) objs
         Nothing -> blank
 
 getArt :: Now Schema

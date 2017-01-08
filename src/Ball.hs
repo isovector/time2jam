@@ -1,8 +1,10 @@
-{-# LANGUAGE NamedFieldPuns  #-}
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE NamedFieldPuns    #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards   #-}
 
 module Ball where
 
+import Art
 import Baller
 import Camera
 import Capsule
@@ -13,10 +15,11 @@ import Game.Sequoia.Color
 import JamPrelude
 import Motion
 
-defaultBall :: Ball
-defaultBall = Ball
+defaultBall :: Schema -> Ball
+defaultBall schema = Ball
   { _ballCap   = ballCapsule
   , _ballState = BallUnowned
+  , _ballArt = Art schema "ball" "Idle" 0 1
   }
 
 ballCapsule :: Capsule
@@ -92,17 +95,20 @@ orange = rgb 0.98 0.51 0.13
 
 drawBall :: Camera -> Maybe Baller -> Ball -> Form
 drawBall _ (Just _) _ = group []
-drawBall cam Nothing ball =
+drawBall cam Nothing Ball{_ballCap, _ballArt} =
     group [ move shadowPos
             . filled black
             $ circle (shadowSize * radius)
           , move pos2d
-            . filled orange
-            $ circle (size * radius)
+            . group
+            . return
+            . scale size
+            . scale 0.3
+            $ drawArt _ballArt 0
           ]
   where
     -- lineStyle = defaultLine { lineWidth = 2 }
-    pos       = ball ^. ballCap.capPos
+    pos       = view capPos _ballCap
     (pos2d, size) = toScaledScreen cam pos
     (shadowPos, shadowSize) = toScaledScreen cam $ pos & _y .~ 0
     radius = 7
