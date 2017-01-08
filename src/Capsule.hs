@@ -86,16 +86,17 @@ resolveCapsules :: (Ord s)
                -> ([s], [(s, s)])
 resolveCapsules l = second nub
                   . runWriter
-                  . findFixedPoint (stepAllPos l)
+                  . findFixedPoint 1 (stepAllPos l)
 
-findFixedPoint :: (Eq a, Monad m) => (a -> m a) -> a -> m a
-findFixedPoint f a = go a (f a)
+findFixedPoint :: (Eq a, Monad m) => Int -> (a -> m a) -> a -> m a
+findFixedPoint n f a = go n a (f a)
   where
-     go b mb = do
+     go 0 _ mb = mb
+     go i b mb = do
       b' <- mb
       if b == b'
          then return b
-         else go b' (f b')
+         else go (i - 1) b' (f b')
 
 updateCapsule :: Time -> Capsule -> Writer [Action] Capsule
 updateCapsule dt c@Capsule{..}
