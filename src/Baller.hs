@@ -1,9 +1,11 @@
+{-# LANGUAGE NamedFieldPuns    #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
 module Baller where
 
+import Art
 import Basket
 import Camera
 import Capsule
@@ -27,19 +29,21 @@ ballerCapsule = Capsule
 
 defaultBaller :: Schema -> Baller
 defaultBaller schema = Baller
-  { _bCap   = ballerCapsule
-  , _bColor = rgb 0.67 0 0.47
-  , _bStats = def
-  , _bFwd   = RNet
-  , _bDir   = V3 0 0 0
-  , _bState = BSDefault
-  , _bArt   = Art schema "baller" "Idle" 0 1500
+  { _bCap    = ballerCapsule
+  , _bColor  = rgb 0.67 0 0.47
+  , _bStats  = def
+  , _bFwd    = RNet
+  , _bDir    = V3 0 0 0
+  , _bFacing = RNet
+  , _bState  = BSDefault
+  , _bArt    = Art schema "baller" "Idle" 0 1500
   }
 
 otherBaller :: Schema -> Baller
 otherBaller schema = defaultBaller schema
                    & bColor .~ rgb 0.47 0 0.67
                    & bFwd .~ LNet
+                   & bFacing .~ LNet
 
 updateBaller :: Time
              -> Controller
@@ -53,6 +57,7 @@ updateBaller dt ctrl p b@Baller{..} = do
     b { _bCap = clampToGround newCap
       , _bDir = velocity
       , _bState = state'
+      , _bFacing = facing $ (newCap ^. capPos._x) - (_bCap ^. capPos._x)
       }
   where
     speed =
@@ -65,6 +70,10 @@ updateBaller dt ctrl p b@Baller{..} = do
 
     dx = (*^) speed $ _ctrlDir ctrl
     velocity  = V3 (view _x dx) 0 (view _y dx)
+    facing x | x < 0     = LNet
+             | x > 0     = RNet
+             | otherwise = _bFacing
+
     hasMotion = isJust $ view capMotion _bCap
     jumpAction = bool (jump 1.5 velocity)
                       (dunk _bFwd)
@@ -173,30 +182,31 @@ dunk net c@Capsule{..} = setMotion c . motion $ do
 
 
 
-drawBaller :: Camera -> Baller -> Form
-drawBaller cam b =
+drawBaller :: Camera -> Time -> Baller -> Form
+drawBaller cam now b@Baller{_bArt, _bFacing} =
   group [ move shadowPos
           . traced' black
           $ oval (shadowWidth * shadowSize)
                  (shadowHeight * shadowSize)
         , move pos2d
-          . traced' (_bColor b)
-          $ polygon
-            [ V2 (-width) 0
-            , V2 (-width) (-height)
-            , V2   width  (-height)
-            , V2   width 0
-            ]
+          . scale size
+          . move (V2 (-54) (-150))
+          . toForm
+          . centeredCollage 100 300
+          . return
+          . scale 0.3
+          . flipped
+          $ drawArt _bArt now
         ]
   where
     pos = b ^. bCap.capPos
     (pos2d, size) = toScaledScreen cam pos
     (shadowPos, shadowSize) = toScaledScreen cam $ pos & _y .~ 0
-    width = 14 * size
-    height = 70 * size
     shadowWidth = 50
     shadowHeight = 20
-
+    flipped = case _bFacing of
+                RNet -> id
+                LNet -> flipX
 
 doShove :: [Shove] -> [GObject] -> [GObject]
 doShove shoves objs = do
@@ -226,5 +236,5 @@ doShove shoves objs = do
               runBezier 0.15 [pos + forces] pos
 
 ballerBallHeight :: Baller -> V3
-ballerBallHeight b = b ^. bCap.capHeight / 2 *^ unitY
+ballerBallHeight b = view (bCap.capHeight) b / 2 *^ unitY
 

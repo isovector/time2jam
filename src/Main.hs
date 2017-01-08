@@ -37,10 +37,10 @@ initGame :: Schema -> Game
 initGame schema = Game
   { _gCamera  = def
   , _gBall    = defaultBall
-  , _gBallers = [ defaultBaller schema & bCap.capPos .~ V3 2 0 (-2)
-                , defaultBaller schema & bCap.capPos .~ V3 2 0 2
-                , otherBaller schema & bCap.capPos .~ V3 (-2) 0 2
-                , otherBaller schema & bCap.capPos .~ V3 (-2) 0 (-2)
+  , _gBallers = [ defaultBaller schema & bCap.capPos .~ V3 (-2) 0 (-2)
+                , defaultBaller schema & bCap.capPos .~ V3 (-2) 0 2
+                , otherBaller schema & bCap.capPos .~ V3 2 0 2
+                , otherBaller schema & bCap.capPos .~ V3 2 0 (-2)
                 ]
   }
 
@@ -151,14 +151,7 @@ magic _ = do
   return $ do
     g@Game {..} <- sample game
     let cam = _gCamera
-        art = head _gBallers ^. bArt
     now <- sample $ totalTime clock
-    let skel = move (V2 (-40) (-150))
-             . toForm
-             . centeredCollage 100 300
-             . return
-             $ scale 0.3
-             $ drawArt art now
 
     return $ centeredCollage 700 400 $
            [ drawCourt court cam
@@ -169,8 +162,7 @@ magic _ = do
                       (flip ownerToBaller g
                           <$> preview (ballState._BallOwned) _gBall)
                       _gBall
-           , move (toScreen cam $ V3 10 0 (-5)) skel
-           ] ++ fmap (drawBaller cam) _gBallers
+           ] ++ fmap (drawBaller cam now) _gBallers
 
 
 main :: IO ()

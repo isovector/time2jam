@@ -132,13 +132,14 @@ instance Show Art where
   show Art{..} = show (_aEntity, _aAnim, _aStarted, _aSpeedMult)
 
 data Baller = Baller
-  { _bCap   :: Capsule
-  , _bColor :: Color
-  , _bStats :: Stats
-  , _bFwd   :: Net
-  , _bDir   :: V3
-  , _bState :: BallerState
-  , _bArt   :: Art
+  { _bCap    :: Capsule
+  , _bColor  :: Color
+  , _bStats  :: Stats
+  , _bFwd    :: Net
+  , _bDir    :: V3
+  , _bFacing :: Net
+  , _bState  :: BallerState
+  , _bArt    :: Art
   } deriving (Eq, Show)
 makeLenses ''Baller
 
