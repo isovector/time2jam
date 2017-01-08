@@ -53,12 +53,13 @@ updateBaller :: Time
 updateBaller dt ctrl p b@Baller{..} = do
   tell actions
   newCap <- cap'
+  let posDelta = _capPos newCap - _capPos _bCap
   return $
     b { _bCap = clampToGround newCap
       , _bDir = velocity
       , _bState = state'
-      , _bFacing = facing $ (newCap ^. capPos._x) - (_bCap ^. capPos._x)
-      } & bArt.aAnim .~ animName
+      , _bFacing = facing $ view _x posDelta
+      } & bArt.aAnim .~ animName posDelta
   where
     speed =
       let baseSpeed = _bStats ^. sSpeed
@@ -70,9 +71,12 @@ updateBaller dt ctrl p b@Baller{..} = do
 
     dx = (*^) speed $ _ctrlDir ctrl
     velocity  = V3 (view _x dx) 0 (view _y dx)
-    animName | velocity == V3 0 0 0 = "Idle"
-             | p == Has = "DribbleRun"
-             | otherwise = "Run"
+
+    animName (V3 0 0 0) = "Idle"
+    animName (V3 _ 0 _) | p == Has  = "DribbleRun"
+                        | otherwise = "Run"
+    animName _ = "Idle"
+
 
     facing x | x < 0     = LNet
              | x > 0     = RNet
