@@ -158,7 +158,6 @@ magic _ = do
            , drawBasket cam RNet
            , drawBasket cam LNet
            , drawBall cam
-                      now
                       (flip ownerToBaller g
                           <$> preview (ballState._BallOwned) _gBall)
                       _gBall

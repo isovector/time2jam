@@ -42,6 +42,9 @@ drawArt Art{..} now =
       bones = animate animation frame
       drawBone ResultBone{..} = move (V2 _rbX $ -_rbY)
                               . rotate (-_rbAngle)
+                              . group
+                              . return
+                              . scaleXY _rbScaleX _rbScaleY
    in case bones of
         Just x -> group . fmap (uncurry drawBone)
                         . zip (sortBy (comparing $ (fmap . fmap) _boneObjFile _rbObj)

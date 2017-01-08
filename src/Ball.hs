@@ -8,7 +8,6 @@ import Camera
 import Capsule
 import Control.Monad.Writer (Writer)
 import Data.Bits (complementBit)
-import Data.Bool (bool)
 import Data.Maybe (isJust)
 import Game.Sequoia.Color
 import JamPrelude
@@ -91,8 +90,9 @@ updateBall dt hit ballers action b@Ball{..} = do
 orange :: Color
 orange = rgb 0.98 0.51 0.13
 
-drawBall :: Camera -> Time -> Maybe Baller -> Ball -> Form
-drawBall cam when owner ball =
+drawBall :: Camera -> Maybe Baller -> Ball -> Form
+drawBall _ (Just _) _ = group []
+drawBall cam Nothing ball =
     group [ move shadowPos
             . filled black
             $ circle (shadowSize * radius)
@@ -102,14 +102,8 @@ drawBall cam when owner ball =
           ]
   where
     -- lineStyle = defaultLine { lineWidth = 2 }
-    pos       = ball ^. ballCap.capPos + bool dpos zero hasMotion
+    pos       = ball ^. ballCap.capPos
     (pos2d, size) = toScaledScreen cam pos
     (shadowPos, shadowSize) = toScaledScreen cam $ pos & _y .~ 0
-    hasMotion = isJust $ ball ^. ballCap.capMotion
-    dpos      = case isJust . view (bCap.capMotion) <$> owner of
-                  Just True  -> unitY
-                  Just False -> dribble
-                  Nothing    -> zero
-    dribble   = ((/2) $ sin (when * 9) + 1) *^ unitY
     radius = 7
 

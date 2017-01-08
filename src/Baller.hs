@@ -58,7 +58,7 @@ updateBaller dt ctrl p b@Baller{..} = do
       , _bDir = velocity
       , _bState = state'
       , _bFacing = facing $ (newCap ^. capPos._x) - (_bCap ^. capPos._x)
-      }
+      } & bArt.aAnim .~ animName
   where
     speed =
       let baseSpeed = _bStats ^. sSpeed
@@ -70,6 +70,10 @@ updateBaller dt ctrl p b@Baller{..} = do
 
     dx = (*^) speed $ _ctrlDir ctrl
     velocity  = V3 (view _x dx) 0 (view _y dx)
+    animName | velocity == V3 0 0 0 = "Idle"
+             | p == Has = "DribbleRun"
+             | otherwise = "Run"
+
     facing x | x < 0     = LNet
              | x > 0     = RNet
              | otherwise = _bFacing
