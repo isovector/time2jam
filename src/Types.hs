@@ -1,8 +1,12 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE PatternSynonyms  #-}
+{-# LANGUAGE RecordWildCards  #-}
 {-# LANGUAGE TemplateHaskell  #-}
 
-module Types where
+module Types
+  ( module Types
+  , Schema
+  ) where
 
 import Control.Lens
 import Control.Monad.Coroutine
@@ -10,6 +14,7 @@ import Control.Monad.Coroutine.SuspensionFunctors
 import Control.Monad.Writer (Writer)
 import Data.Default
 import Data.Maybe (isJust)
+import Data.Spriter.Types
 import Game.Sequoia
 
 toPoly :: V2 -> [V2] -> Shape
@@ -114,6 +119,18 @@ instance Default Stats where
   def = Stats 5 1.5
 makeLenses ''Stats
 
+data Art = Art
+  { _aSchema    :: Schema
+  , _aEntity    :: EntityName
+  , _aAnim      :: AnimationName
+  , _aStarted   :: Time
+  , _aSpeedMult :: Double
+  } deriving (Eq)
+makeLenses ''Art
+
+instance Show Art where
+  show Art{..} = show (_aEntity, _aAnim, _aStarted, _aSpeedMult)
+
 data Baller = Baller
   { _bCap   :: Capsule
   , _bColor :: Color
@@ -121,6 +138,7 @@ data Baller = Baller
   , _bFwd   :: Net
   , _bDir   :: V3
   , _bState :: BallerState
+  , _bArt   :: Art
   } deriving (Eq, Show)
 makeLenses ''Baller
 

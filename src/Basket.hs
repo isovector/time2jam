@@ -3,7 +3,6 @@ module Basket where
 import Camera
 import Constants
 import Game.Sequoia.Color
-import Game.Sequoia.Utils
 import JamPrelude
 
 

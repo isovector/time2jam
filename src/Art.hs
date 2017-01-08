@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
+{-# LANGUAGE RecordWildCards   #-}
 
 module Art where
 
@@ -30,10 +31,14 @@ makeSprites schema = toProp
   where
     toProp File{..} = sprite $ "art/raw/" <> _fileName
 
-doAnimation :: Schema -> Double -> Form
-doAnimation schema frame =
-  let Just entity = schema ^. schemaEntity . at "baller"
-      Just animation = entity ^. entityAnimation . at "Run"
+drawArt :: Art
+        -> Double  -- ^ Time since start of game.
+        -> Form
+drawArt Art{..} now =
+  let Just entity = _aSchema ^. schemaEntity . at _aEntity
+      Just animation = entity ^. entityAnimation . at _aAnim
+      frame = fmod (animation ^. animLength)
+                   ((now - _aStarted) * _aSpeedMult)
       bones = animate animation frame
       drawBone ResultBone{..} = move (V2 _rbX $ -_rbY)
                               . rotate (-_rbAngle)
@@ -41,7 +46,7 @@ doAnimation schema frame =
         Just x -> group . fmap (uncurry drawBone)
                         . zip (sortBy (comparing $ (fmap . fmap) _boneObjFile _rbObj)
                                 $ filter (not . isBone) x)
-                        $ makeSprites schema
+                        $ makeSprites _aSchema
         Nothing -> blank
 
 getArt :: Now Schema

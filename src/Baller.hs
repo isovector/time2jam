@@ -1,5 +1,6 @@
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards   #-}
+{-# LANGUAGE TemplateHaskell   #-}
 
 module Baller where
 
@@ -24,25 +25,21 @@ ballerCapsule = Capsule
   , _capMotion   = Nothing
   }
 
-defaultBaller :: Baller
-defaultBaller = Baller
+defaultBaller :: Schema -> Baller
+defaultBaller schema = Baller
   { _bCap   = ballerCapsule
   , _bColor = rgb 0.67 0 0.47
   , _bStats = def
   , _bFwd   = RNet
   , _bDir   = V3 0 0 0
   , _bState = BSDefault
+  , _bArt   = Art schema "baller" "Idle" 0 1500
   }
 
-otherBaller :: Baller
-otherBaller = Baller
-  { _bCap   = ballerCapsule
-  , _bColor = rgb 0.47 0 0.67
-  , _bStats = def
-  , _bFwd   = LNet
-  , _bDir   = V3 0 0 0
-  , _bState = BSDefault
-  }
+otherBaller :: Schema -> Baller
+otherBaller schema = defaultBaller schema
+                   & bColor .~ rgb 0.47 0 0.67
+                   & bFwd .~ LNet
 
 updateBaller :: Time
              -> Controller

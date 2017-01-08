@@ -20,7 +20,6 @@ import Control.Monad.Writer (Writer, runWriter, tell)
 import Court
 import Data.List (find, partition)
 import Data.Maybe (listToMaybe, mapMaybe)
-import Data.Spriter.Skeleton (fmod)
 import Data.Tuple (swap)
 import Game.Sequoia.Keyboard
 import Input
@@ -34,14 +33,14 @@ data Game = Game
   }
 makeLenses ''Game
 
-initGame :: Game
-initGame = Game
+initGame :: Schema -> Game
+initGame schema = Game
   { _gCamera  = def
   , _gBall    = defaultBall
-  , _gBallers = [ defaultBaller & bCap.capPos .~ V3 2 0 (-2)
-                , defaultBaller & bCap.capPos .~ V3 2 0 2
-                , otherBaller & bCap.capPos .~ V3 (-2) 0 2
-                , otherBaller & bCap.capPos .~ V3 (-2) 0 (-2)
+  , _gBallers = [ defaultBaller schema & bCap.capPos .~ V3 2 0 (-2)
+                , defaultBaller schema & bCap.capPos .~ V3 2 0 2
+                , otherBaller schema & bCap.capPos .~ V3 (-2) 0 2
+                , otherBaller schema & bCap.capPos .~ V3 (-2) 0 (-2)
                 ]
   }
 
@@ -136,7 +135,7 @@ magic _ = do
   schema     <- getArt
 
   (game, _) <-
-    foldmp initGame $ \g -> do
+    foldmp (initGame schema) $ \g -> do
       dt    <- sample $ deltaTime clock
       rctrl  <- sample oldCtrl
       rctrl' <- sample controller
@@ -152,13 +151,14 @@ magic _ = do
   return $ do
     g@Game {..} <- sample game
     let cam = _gCamera
+        art = head _gBallers ^. bArt
     now <- sample $ totalTime clock
     let skel = move (V2 (-40) (-150))
              . toForm
              . centeredCollage 100 300
              . return
              $ scale 0.3
-             $ doAnimation schema $ (1200 `fmod` (now * 1500))
+             $ drawArt art now
 
     return $ centeredCollage 700 400 $
            [ drawCourt court cam
