@@ -5,6 +5,8 @@ module Art where
 
 import Control.Lens
 import Data.Aeson (decode, fromJSON, Result (Success))
+import Data.List (sortBy)
+import Data.Ord (comparing)
 import Data.Scientific (toRealFloat)
 import Data.Spriter.Skeleton
 import Data.Spriter.Types
@@ -22,7 +24,13 @@ makeBones entity = toProp <$> view entityObjInfo entity
                       , V2 0 (toRealFloat $ (-_boneHeight) / 2)
                       ]
 
-doAnimation :: Schema -> Int -> Form
+makeSprites :: Schema -> [Form]
+makeSprites schema = toProp
+                 <$> schema ^. schemaFolder._head.folderFile
+  where
+    toProp File{..} = sprite $ "art/raw/" <> _fileName
+
+doAnimation :: Schema -> Double -> Form
 doAnimation schema frame =
   let Just entity = schema ^. schemaEntity . at "baller"
       Just animation = entity ^. entityAnimation . at "Run"
@@ -31,7 +39,9 @@ doAnimation schema frame =
                               . rotate (-_rbAngle)
    in case bones of
         Just x -> group . fmap (uncurry drawBone)
-                        $ zip x (makeBones entity)
+                        . zip (sortBy (comparing $ (fmap . fmap) _boneObjFile _rbObj)
+                                $ filter (not . isBone) x)
+                        $ makeSprites schema
         Nothing -> blank
 
 getArt :: Now Schema

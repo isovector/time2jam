@@ -178,27 +178,27 @@ dunk net c@Capsule{..} = setMotion c . motion $ do
 
 drawBaller :: Camera -> Baller -> Form
 drawBaller cam b =
-  group [ move (toScreen cam shadowPos)
+  group [ move shadowPos
           . traced' black
-          $ oval shadowWidth
-                 shadowHeight
-        , move (toScreen cam pos)
+          $ oval (shadowWidth * shadowSize)
+                 (shadowHeight * shadowSize)
+        , move pos2d
           . traced' (_bColor b)
           $ polygon
             [ V2 (-width) 0
-            , V2 (-width) height
-            , V2   width  height
+            , V2 (-width) (-height)
+            , V2   width  (-height)
             , V2   width 0
             ]
         ]
   where
-    pos = b ^. bCap . capPos
-    shadowPos = pos & _y .~ 0
-    size = depthMod cam pos
-    width = 50 * size / 2
-    height = negate $ 135 * size
-    shadowWidth = 80 * size
-    shadowHeight = 30 * size
+    pos = b ^. bCap.capPos
+    (pos2d, size) = toScaledScreen cam pos
+    (shadowPos, shadowSize) = toScaledScreen cam $ pos & _y .~ 0
+    width = 14 * size
+    height = 70 * size
+    shadowWidth = 50
+    shadowHeight = 20
 
 
 doShove :: [Shove] -> [GObject] -> [GObject]

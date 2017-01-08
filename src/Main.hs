@@ -20,6 +20,7 @@ import Control.Monad.Writer (Writer, runWriter, tell)
 import Court
 import Data.List (find, partition)
 import Data.Maybe (listToMaybe, mapMaybe)
+import Data.Spriter.Skeleton (fmod)
 import Data.Tuple (swap)
 import Game.Sequoia.Keyboard
 import Input
@@ -154,10 +155,10 @@ magic _ = do
     now <- sample $ totalTime clock
     let skel = move (V2 (-40) (-150))
              . toForm
-             . centeredCollage 80 300
+             . centeredCollage 100 300
              . return
-             $ scale 0.4
-             $ doAnimation schema $ ((round now * 10) `mod` 1200)
+             $ scale 0.3
+             $ doAnimation schema $ (1200 `fmod` (now * 1500))
 
     return $ centeredCollage 700 400 $
            [ drawCourt court cam

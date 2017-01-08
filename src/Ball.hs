@@ -93,24 +93,23 @@ orange = rgb 0.98 0.51 0.13
 
 drawBall :: Camera -> Time -> Maybe Baller -> Ball -> Form
 drawBall cam when owner ball =
-    group [ move (toScreen cam shadowPos)
+    group [ move shadowPos
             . filled black
-            $ circle shadowRadius
-          , move (toScreen cam pos)
+            $ circle (shadowSize * radius)
+          , move pos2d
             . filled orange
-            $ circle radius
+            $ circle (size * radius)
           ]
   where
     -- lineStyle = defaultLine { lineWidth = 2 }
     pos       = ball ^. ballCap.capPos + bool dpos zero hasMotion
+    (pos2d, size) = toScaledScreen cam pos
+    (shadowPos, shadowSize) = toScaledScreen cam $ pos & _y .~ 0
     hasMotion = isJust $ ball ^. ballCap.capMotion
     dpos      = case isJust . view (bCap.capMotion) <$> owner of
                   Just True  -> unitY
                   Just False -> dribble
                   Nothing    -> zero
     dribble   = ((/2) $ sin (when * 9) + 1) *^ unitY
-    radius    = 10 * depthMod cam pos
-
-    shadowPos    = _y .~ 0 $ pos
-    shadowRadius = 10 * depthMod cam pos
+    radius = 7
 
