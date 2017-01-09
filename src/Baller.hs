@@ -22,7 +22,7 @@ ballerCapsule :: Capsule
 ballerCapsule = Capsule
   { _capPos      = V3 0 0 0
   , _capRadius   = 0.75
-  , _capHeight   = 2
+  , _capHeight   = standardBallerHeight
   , _capEthereal = False
   , _capMotion   = Nothing
   }
@@ -44,6 +44,7 @@ otherBaller schema = defaultBaller schema
                    & bColor .~ rgb 0.47 0 0.67
                    & bFwd .~ LNet
                    & bFacing .~ LNet
+                   & bCap.capHeight .~ 2.5
 
 updateBaller :: Time
              -> Controller
@@ -199,6 +200,7 @@ drawBaller cam now b@Baller{..} =
         , move pos2d
           . group
           . return
+          . scaleXY 1 (ballerHeightMult b)
           . scale size
           . scale 0.3
           . flipped
@@ -240,6 +242,9 @@ doShove shoves objs = do
             $ \c -> setMotion c . motion $ do
               let pos = c ^. capPos
               runBezier 0.15 [pos + forces] pos
+
+ballerHeightMult :: Baller -> Double
+ballerHeightMult b = view (bCap.capHeight) b / standardBallerHeight
 
 ballerBallHeight :: Baller -> V3
 ballerBallHeight b = view (bCap.capHeight) b / 2 *^ unitY

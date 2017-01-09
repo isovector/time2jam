@@ -41,3 +41,6 @@ gameWidth = 700
 
 gameHeight :: Double
 gameHeight = 400
+
+standardBallerHeight :: Double
+standardBallerHeight = 2
