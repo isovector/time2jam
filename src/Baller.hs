@@ -30,7 +30,7 @@ ballerCapsule = Capsule
 defaultBaller :: Schema -> Baller
 defaultBaller schema = Baller
   { _bCap    = ballerCapsule
-  , _bColor  = rgb 0.67 0 0.47
+  , _bColor  = red
   , _bStats  = def
   , _bFwd    = RNet
   , _bDir    = V3 0 0 0
@@ -191,7 +191,7 @@ dunk net c@Capsule{..} = setMotion c . motion $ do
 
 
 drawBaller :: Camera -> Time -> Baller -> Form
-drawBaller cam now b@Baller{_bArt, _bFacing} =
+drawBaller cam now b@Baller{..} =
   group [ move shadowPos
           . traced' black
           $ oval (shadowWidth * shadowSize)
@@ -202,7 +202,7 @@ drawBaller cam now b@Baller{_bArt, _bFacing} =
           . scale size
           . scale 0.3
           . flipped
-          $ drawArt _bArt now
+          $ drawArt _bArt (Just _bColor) now
         ]
   where
     pos = b ^. bCap.capPos

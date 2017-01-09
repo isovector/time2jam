@@ -104,7 +104,7 @@ drawBall cam Nothing Ball{_ballCap, _ballArt} =
             . return
             . scale size
             . scale 0.3
-            $ drawArt _ballArt 0
+            $ drawArt _ballArt Nothing 0
           ]
   where
     -- lineStyle = defaultLine { lineWidth = 2 }

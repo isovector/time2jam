@@ -18,7 +18,8 @@ import Control.FRPNow.Time (delayTime)
 import Control.Lens
 import Control.Monad.Writer (Writer, runWriter, tell)
 import Court
-import Data.List (find, partition)
+import Data.List (find, partition, sortBy)
+import Data.Ord (comparing)
 import Data.Maybe (listToMaybe, mapMaybe)
 import Data.Tuple (swap)
 import Game.Sequoia.Keyboard
@@ -161,7 +162,7 @@ magic _ = do
                       (flip ownerToBaller g
                           <$> preview (ballState._BallOwned) _gBall)
                       _gBall
-           ] ++ fmap (drawBaller cam now) _gBallers
+           ] ++ fmap (drawBaller cam now) (sortBy (comparing $ view $ bCap.capPos._z) _gBallers)
 
 
 main :: IO ()

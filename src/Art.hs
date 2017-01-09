@@ -11,24 +11,27 @@ import Data.Maybe (fromJust)
 import Data.Spriter.Skeleton
 import Data.Spriter.Types
 import Data.String.Conv (toS)
+import Game.Sequoia.Graphics (Element (ImageElement))
 import JamPrelude
 import Data.Vector (Vector, (!), fromList)
 
-makeSprites :: Schema -> Vector Form
-makeSprites schema = fromList $ toProp
+makeSprites :: Schema -> Maybe Color -> Vector Form
+makeSprites schema correction = fromList $ toProp
                  <$> schema ^. schemaFolder._head.folderFile
   where
-    toProp File{..} = sprite $ "art/raw/" <> _fileName
+    toProp File{..} = toForm . ImageElement Nothing correction
+                             $ "art/raw/" <> _fileName
 
 drawArt :: Art
+        -> Maybe Color
         -> Double  -- ^ Time since start of game.
         -> Form
-drawArt Art{..} now =
+drawArt Art{..} correction now =
   let Just entity = _aSchema ^. schemaEntity . at _aEntity
       Just animation = entity ^. entityAnimation . at _aAnim
       frame = fmod (animation ^. animLength)
                    ((now - _aStarted) * _aSpeedMult)
-      sprites = makeSprites _aSchema
+      sprites = makeSprites _aSchema correction
       drawBone ResultBone{..} = move (V2 _rbX $ -_rbY)
                               . rotate (-_rbAngle)
                               . group

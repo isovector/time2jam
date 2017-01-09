@@ -38,4 +38,3 @@ runMotion dt (Motion m) = (resume $ m dt) >>= \case
   Left (Request v3 c) -> return (v3, Just $ Motion c)
   Right v3            -> return (v3, Nothing)
 
-
