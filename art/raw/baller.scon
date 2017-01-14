@@ -730,7 +730,7 @@
 				{
 					"id": 1,
 					"interval": 100,
-					"length": 1000,
+					"length": 1,
 					"mainline": {
 						"key": [
 							{
@@ -1453,6 +1453,754 @@
 				},
 				{
 					"id": 2,
+					"interval": 100,
+					"length": 1,
+					"mainline": {
+						"key": [
+							{
+								"bone_ref": [
+									{
+										"id": 0,
+										"key": 0,
+										"timeline": 15
+									},
+									{
+										"id": 1,
+										"key": 0,
+										"parent": 0,
+										"timeline": 16
+									},
+									{
+										"id": 2,
+										"key": 0,
+										"parent": 1,
+										"timeline": 17
+									},
+									{
+										"id": 3,
+										"key": 0,
+										"parent": 0,
+										"timeline": 18
+									},
+									{
+										"id": 4,
+										"key": 0,
+										"parent": 3,
+										"timeline": 19
+									},
+									{
+										"id": 5,
+										"key": 0,
+										"parent": 4,
+										"timeline": 20
+									},
+									{
+										"id": 6,
+										"key": 0,
+										"parent": 0,
+										"timeline": 21
+									},
+									{
+										"id": 7,
+										"key": 0,
+										"parent": 6,
+										"timeline": 22
+									},
+									{
+										"id": 8,
+										"key": 0,
+										"parent": 7,
+										"timeline": 28
+									},
+									{
+										"id": 9,
+										"key": 0,
+										"parent": 0,
+										"timeline": 23
+									},
+									{
+										"id": 10,
+										"key": 0,
+										"parent": 9,
+										"timeline": 24
+									},
+									{
+										"id": 11,
+										"key": 0,
+										"parent": 10,
+										"timeline": 29
+									},
+									{
+										"id": 12,
+										"key": 0,
+										"parent": 0,
+										"timeline": 25
+									},
+									{
+										"id": 13,
+										"key": 0,
+										"parent": 12,
+										"timeline": 26
+									},
+									{
+										"id": 14,
+										"key": 0,
+										"parent": 13,
+										"timeline": 27
+									}
+								],
+								"id": 0,
+								"object_ref": [
+									{
+										"id": 0,
+										"key": 0,
+										"parent": 5,
+										"timeline": "9",
+										"z_index": "0"
+									},
+									{
+										"id": 1,
+										"key": 0,
+										"parent": 4,
+										"timeline": "8",
+										"z_index": "1"
+									},
+									{
+										"id": 2,
+										"key": 0,
+										"parent": 3,
+										"timeline": "7",
+										"z_index": "2"
+									},
+									{
+										"id": 3,
+										"key": 0,
+										"parent": 11,
+										"timeline": "14",
+										"z_index": "3"
+									},
+									{
+										"id": 4,
+										"key": 0,
+										"parent": 10,
+										"timeline": "12",
+										"z_index": "4"
+									},
+									{
+										"id": 5,
+										"key": 0,
+										"parent": 9,
+										"timeline": "10",
+										"z_index": "5"
+									},
+									{
+										"id": 6,
+										"key": 0,
+										"parent": 1,
+										"timeline": "2",
+										"z_index": "6"
+									},
+									{
+										"id": 7,
+										"key": 0,
+										"parent": 0,
+										"timeline": "0",
+										"z_index": "7"
+									},
+									{
+										"id": 8,
+										"key": 0,
+										"parent": 8,
+										"timeline": "13",
+										"z_index": "8"
+									},
+									{
+										"id": 9,
+										"key": 0,
+										"parent": 7,
+										"timeline": "11",
+										"z_index": "9"
+									},
+									{
+										"id": 10,
+										"key": 0,
+										"parent": 6,
+										"timeline": "3",
+										"z_index": "10"
+									},
+									{
+										"id": 11,
+										"key": 0,
+										"parent": 2,
+										"timeline": "1",
+										"z_index": "11"
+									},
+									{
+										"id": 12,
+										"key": 0,
+										"timeline": "30",
+										"z_index": "12"
+									},
+									{
+										"id": 13,
+										"key": 0,
+										"parent": 12,
+										"timeline": "4",
+										"z_index": "13"
+									},
+									{
+										"id": 14,
+										"key": 0,
+										"parent": 13,
+										"timeline": "5",
+										"z_index": "14"
+									},
+									{
+										"id": 15,
+										"key": 0,
+										"parent": 14,
+										"timeline": "6",
+										"z_index": "15"
+									}
+								]
+							}
+						]
+					},
+					"name": "PreDunk",
+					"timeline": [
+						{
+							"id": 0,
+							"key": [
+								{
+									"id": 0,
+									"object": {
+										"angle": 255.7354877019201,
+										"file": 0,
+										"folder": 0,
+										"x": 99.59719104777326,
+										"y": 18.56845173297435
+									},
+									"spin": 0
+								}
+							],
+							"name": "Torso"
+						},
+						{
+							"id": 1,
+							"key": [
+								{
+									"id": 0,
+									"object": {
+										"angle": 247.58385252065636,
+										"file": 1,
+										"folder": 0,
+										"x": 39.07108616638879,
+										"y": 13.885442190770716
+									},
+									"spin": 0
+								}
+							],
+							"name": "Head"
+						},
+						{
+							"id": 2,
+							"key": [
+								{
+									"id": 0,
+									"object": {
+										"angle": 240.64224645720867,
+										"file": 2,
+										"folder": 0,
+										"x": 15.188977338312142,
+										"y": 6.378602517921823
+									},
+									"spin": 0
+								}
+							],
+							"name": "Neck"
+						},
+						{
+							"id": 3,
+							"key": [
+								{
+									"id": 0,
+									"object": {
+										"angle": 90.90938044919915,
+										"file": 3,
+										"folder": 0,
+										"x": -11.767619240689603,
+										"y": -22.045165896159695
+									},
+									"spin": 0
+								}
+							],
+							"name": "FrontThigh"
+						},
+						{
+							"id": 4,
+							"key": [
+								{
+									"id": 0,
+									"object": {
+										"angle": 357.82339305906135,
+										"file": 4,
+										"folder": 0,
+										"x": -2.999766638378764,
+										"y": 10.114438159225077
+									},
+									"spin": 0
+								}
+							],
+							"name": "FrontBicep"
+						},
+						{
+							"id": 5,
+							"key": [
+								{
+									"id": 0,
+									"object": {
+										"angle": 300.8908472526111,
+										"file": 5,
+										"folder": 0,
+										"x": 29.757953956935857,
+										"y": 24.752337671821902
+									},
+									"spin": 0
+								}
+							],
+							"name": "FrontForearm"
+						},
+						{
+							"id": 6,
+							"key": [
+								{
+									"id": 0,
+									"object": {
+										"angle": 293.70610935373503,
+										"file": 6,
+										"folder": 0,
+										"scale_x": 1.0000000000000002,
+										"x": 18.486952030305957,
+										"y": 14.136108004423441
+									},
+									"spin": 0
+								}
+							],
+							"name": "FrontHand"
+						},
+						{
+							"id": 7,
+							"key": [
+								{
+									"id": 0,
+									"object": {
+										"angle": 294.77514056883194,
+										"file": 7,
+										"folder": 0,
+										"x": 34.99511846155197,
+										"y": 22.445140856222398
+									},
+									"spin": 0
+								}
+							],
+							"name": "BackBicep"
+						},
+						{
+							"id": 8,
+							"key": [
+								{
+									"id": 0,
+									"object": {
+										"angle": 254.0546040990771,
+										"file": 8,
+										"folder": 0,
+										"x": 34.30052537952566,
+										"y": 2.208715012280746
+									},
+									"spin": 0
+								}
+							],
+							"name": "BackForearm"
+						},
+						{
+							"id": 9,
+							"key": [
+								{
+									"id": 0,
+									"object": {
+										"angle": 244.02560603756865,
+										"file": 9,
+										"folder": 0,
+										"x": 26.910338664035653,
+										"y": 5.3835678119067385
+									},
+									"spin": 0
+								}
+							],
+							"name": "BackHand"
+						},
+						{
+							"id": 10,
+							"key": [
+								{
+									"id": 0,
+									"object": {
+										"angle": 84.47245984834382,
+										"file": 10,
+										"folder": 0,
+										"x": -10.019515075970347,
+										"y": -6.114409883170297
+									},
+									"spin": 0
+								}
+							],
+							"name": "BackThigh"
+						},
+						{
+							"id": 11,
+							"key": [
+								{
+									"id": 0,
+									"object": {
+										"angle": 102.86275101895819,
+										"file": 11,
+										"folder": 0,
+										"x": 2.1622685493459084,
+										"y": -18.75946572008451
+									},
+									"spin": 0
+								}
+							],
+							"name": "FrontCalf"
+						},
+						{
+							"id": 12,
+							"key": [
+								{
+									"id": 0,
+									"object": {
+										"angle": 96.76617482255307,
+										"file": 12,
+										"folder": 0,
+										"x": -8.507963541258965,
+										"y": -13.17930841350693
+									},
+									"spin": 0
+								}
+							],
+							"name": "BackCalf"
+						},
+						{
+							"id": 13,
+							"key": [
+								{
+									"id": 0,
+									"object": {
+										"angle": 79.62333787287793,
+										"file": 13,
+										"folder": 0,
+										"x": -10.730390818995966,
+										"y": -16.209138685015073
+									},
+									"spin": 0
+								}
+							],
+							"name": "FrontFoot"
+						},
+						{
+							"id": 14,
+							"key": [
+								{
+									"id": 0,
+									"object": {
+										"angle": 50.6336293607601,
+										"file": 14,
+										"folder": 0,
+										"x": -15.68907920390664,
+										"y": -6.5175206935270955
+									},
+									"spin": 0
+								}
+							],
+							"name": "BackFoot"
+						},
+						{
+							"id": 15,
+							"key": [
+								{
+									"bone": {
+										"angle": 86.18600000000004,
+										"y": 130.78440999999998
+									},
+									"id": 0,
+									"spin": 0
+								}
+							],
+							"name": "spine",
+							"obj": 0,
+							"object_type": "bone"
+						},
+						{
+							"id": 16,
+							"key": [
+								{
+									"bone": {
+										"angle": 358.6203796218465,
+										"x": 87.92669996745917,
+										"y": 5.410386599063455
+									},
+									"id": 0,
+									"spin": 0
+								}
+							],
+							"name": "neck",
+							"obj": 1,
+							"object_type": "bone"
+						},
+						{
+							"id": 17,
+							"key": [
+								{
+									"bone": {
+										"angle": 0,
+										"x": 8.954907195456489,
+										"y": 1.3713790956128171e-14
+									},
+									"id": 0,
+									"spin": 0
+								}
+							],
+							"name": "head",
+							"obj": 2,
+							"object_type": "bone"
+						},
+						{
+							"id": 18,
+							"key": [
+								{
+									"bone": {
+										"angle": 35.710438251304595,
+										"x": 81.86458857804506,
+										"y": -0.5537595231267932
+									},
+									"id": 0,
+									"spin": 0
+								}
+							],
+							"name": "backbicep",
+							"obj": 3,
+							"object_type": "bone"
+						},
+						{
+							"id": 19,
+							"key": [
+								{
+									"bone": {
+										"angle": 85.48483676443698,
+										"x": 42.73976436798907,
+										"y": -8.638929587534648e-14
+									},
+									"id": 0,
+									"spin": 0
+								}
+							],
+							"name": "backforearm",
+							"obj": 4,
+							"object_type": "bone"
+						},
+						{
+							"id": 20,
+							"key": [
+								{
+									"bone": {
+										"angle": 2.2737367544323206e-13,
+										"x": 32.59750696692775,
+										"y": -6.588889096154576e-14
+									},
+									"id": 0,
+									"spin": 0
+								}
+							],
+							"name": "backhand",
+							"obj": 5,
+							"object_type": "bone"
+						},
+						{
+							"id": 21,
+							"key": [
+								{
+									"bone": {
+										"angle": 116.35204991184892,
+										"x": 12.871471954135732,
+										"y": -0.8002787316377802
+									},
+									"id": 0,
+									"spin": 0
+								}
+							],
+							"name": "frontthigh",
+							"obj": 6,
+							"object_type": "bone"
+						},
+						{
+							"id": 22,
+							"key": [
+								{
+									"bone": {
+										"angle": 265.17186265934544,
+										"x": 65.97195559973292,
+										"y": -1.1152606278237525
+									},
+									"id": 0,
+									"spin": 0
+								}
+							],
+							"name": "frontcalf",
+							"obj": 7,
+							"object_type": "bone"
+						},
+						{
+							"id": 23,
+							"key": [
+								{
+									"bone": {
+										"angle": 108.94365607812324,
+										"x": 5.0431613414833185,
+										"y": -3.465852864351422
+									},
+									"id": 0,
+									"spin": 0
+								}
+							],
+							"name": "backthigh",
+							"obj": 8,
+							"object_type": "bone"
+						},
+						{
+							"id": 24,
+							"key": [
+								{
+									"bone": {
+										"angle": 255.8202552361945,
+										"x": 66.11119032658695,
+										"y": 0.3333213188099306
+									},
+									"id": 0,
+									"spin": 0
+								}
+							],
+							"name": "backcalf",
+							"obj": 9,
+							"object_type": "bone"
+						},
+						{
+							"id": 25,
+							"key": [
+								{
+									"bone": {
+										"angle": 11.212161158817196,
+										"x": 76.22046897328816,
+										"y": 3.986021364786315
+									},
+									"id": 0,
+									"spin": 0
+								}
+							],
+							"name": "frontbicep",
+							"obj": 10,
+							"object_type": "bone"
+						},
+						{
+							"id": 26,
+							"key": [
+								{
+									"bone": {
+										"angle": 107.3162689084541,
+										"x": 45.418818639717465,
+										"y": -5.758846060706287e-13
+									},
+									"id": 0,
+									"spin": 0
+								}
+							],
+							"name": "frontforearm",
+							"obj": 11,
+							"object_type": "bone"
+						},
+						{
+							"id": 27,
+							"key": [
+								{
+									"bone": {
+										"angle": 8.734212928046759,
+										"scale_x": 0.9999999999999998,
+										"x": 41.32351861401272,
+										"y": -1.012134296003135e-14
+									},
+									"id": 0,
+									"spin": 0
+								}
+							],
+							"name": "fronthand",
+							"obj": 12,
+							"object_type": "bone"
+						},
+						{
+							"id": 28,
+							"key": [
+								{
+									"bone": {
+										"angle": 59.15714465176825,
+										"x": 59.84360693563807,
+										"y": 0.5187921347707027
+									},
+									"id": 0,
+									"spin": 0
+								}
+							],
+							"name": "bone_003",
+							"obj": 13,
+							"object_type": "bone"
+						},
+						{
+							"id": 29,
+							"key": [
+								{
+									"bone": {
+										"angle": 69.87540031694522,
+										"x": 58.469290809754845,
+										"y": 1.5340033303430423
+									},
+									"id": 0,
+									"spin": 0
+								}
+							],
+							"name": "bone_004",
+							"obj": 14,
+							"object_type": "bone"
+						},
+						{
+							"id": 30,
+							"key": [
+								{
+									"id": 0,
+									"object": {
+										"file": 15,
+										"folder": 0,
+										"scale_x": 0.5,
+										"scale_y": 0.5,
+										"x": -80,
+										"y": 256
+									},
+									"spin": 0
+								}
+							],
+							"name": "Ball_001"
+						}
+					]
+				},
+				{
+					"id": 3,
 					"interval": 100,
 					"length": 300,
 					"looping": "false",
@@ -3382,7 +4130,7 @@
 					]
 				},
 				{
-					"id": 3,
+					"id": 4,
 					"interval": 100,
 					"length": 150,
 					"looping": "false",
@@ -5352,7 +6100,7 @@
 					]
 				},
 				{
-					"id": 4,
+					"id": 5,
 					"interval": 100,
 					"length": 1200,
 					"mainline": {
@@ -9424,7 +10172,7 @@
 					]
 				},
 				{
-					"id": 5,
+					"id": 6,
 					"interval": 100,
 					"length": 1200,
 					"mainline": {
@@ -14338,6 +15086,7 @@
 								{
 									"id": 0,
 									"object": {
+										"angle": 0,
 										"file": 15,
 										"folder": 0,
 										"scale_x": 0.5,

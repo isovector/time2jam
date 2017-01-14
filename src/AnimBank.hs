@@ -21,6 +21,9 @@ __ball = CannedAnim schema "ball" "Idle" 1 False
 __ballerIdle :: CannedAnim
 __ballerIdle = CannedAnim schema "baller" "Idle" 1500 False
 
+__ballerPreDunk :: CannedAnim
+__ballerPreDunk = CannedAnim schema "baller" "PreDunk" 1500 False
+
 __ballerJumpWithBall :: CannedAnim
 __ballerJumpWithBall = CannedAnim schema "baller" "JumpWithBall" 1500 False
 

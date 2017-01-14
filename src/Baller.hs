@@ -183,6 +183,8 @@ shoot net Capsule {..} = motion $ do
 
 dunk :: Net -> Capsule -> Capsule
 dunk net c@Capsule{..} = setMotion c . motion $ do
+    runBezier 0.1 [ _capPos ] _capPos
+    emit $ PlayAnimation __ballerPreDunk
     runBezier 0.7 [ jumpCtrlPt
                   , netCtrlPt
                   , netPos'
@@ -192,7 +194,7 @@ dunk net c@Capsule{..} = setMotion c . motion $ do
     dunkHeight = 3
     dunkCtrl = (*^) dunkHeight unitY
     netDir = let (x, _, z) = unpackV3 $ netPos' - _capPos
-              in signorm $ V3 x 0 z
+              in signorm $ V3 x 0.0000001 z
     jumpCtrlPt = sum
                [ view _y netPos' *^ unitY
                , netDir
