@@ -116,7 +116,7 @@ updateCapsuleAndAnim now dt art c = do
            . listen
            $ updateCapsule dt c
 
-  let art' = foldl' (((aStarted .~ now) .) . flip (set aAnim)) art
+  let art' = foldl' (((aStarted .~ now) .) . flip (set aCanned)) art
            $ mapMaybe (preview _PlayAnimation) w
   return (c', art')
 

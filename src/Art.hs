@@ -1,3 +1,4 @@
+{-# LANGUAGE NamedFieldPuns    #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 {-# LANGUAGE RecordWildCards   #-}
@@ -6,11 +7,9 @@
 module Art where
 
 import Control.Lens
-import Data.Aeson (decode, fromJSON, Result (Success))
 import Data.Maybe (fromJust)
 import Data.Spriter.Skeleton
 import Data.Spriter.Types
-import Data.String.Conv (toS)
 import Game.Sequoia.Graphics (Element (ImageElement))
 import JamPrelude
 import Data.Vector (Vector, (!), fromList)
@@ -26,7 +25,9 @@ drawArt :: Art
         -> Maybe Color
         -> Double  -- ^ Time since start of game.
         -> Form
-drawArt Art{..} correction now =
+drawArt Art{ _aCanned = CannedAnim{..}
+           , _aStarted
+           } correction now =
   let Just entity = _aSchema ^. schemaEntity . at _aEntity
       Just animation = entity ^. entityAnimation . at _aAnim
       thisFrame = (now - _aStarted) * _aSpeedMult
@@ -44,10 +45,4 @@ drawArt Art{..} correction now =
         Just (filter (not . isBone) -> objs) ->
           group $ fmap (\x -> drawBone x $ sprites ! (_boneObjFile . fromJust $ _rbObj x)) objs
         Nothing -> blank
-
-getArt :: Now Schema
-getArt = do
-    Just json <- liftIO $ decode . toS <$> readFile "art/raw/baller.scon"
-    let Success schema = fromJSON json
-    return schema
 

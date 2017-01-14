@@ -6,6 +6,7 @@
 module Baller where
 
 import Art
+import AnimBank
 import Basket
 import Camera
 import Capsule
@@ -27,8 +28,8 @@ ballerCapsule = Capsule
   , _capMotion   = Nothing
   }
 
-defaultBaller :: Schema -> Baller
-defaultBaller schema = Baller
+defaultBaller :: Baller
+defaultBaller = Baller
   { _bCap    = ballerCapsule
   , _bColor  = red
   , _bStats  = def
@@ -36,15 +37,15 @@ defaultBaller schema = Baller
   , _bDir    = V3 0 0 0
   , _bFacing = RNet
   , _bState  = BSDefault
-  , _bArt    = Art schema "baller" "Idle" 0 1500 False
+  , _bArt    = Art __ballerIdle 0
   }
 
-otherBaller :: Schema -> Baller
-otherBaller schema = defaultBaller schema
-                   & bColor .~ rgb 0.47 0 0.67
-                   & bFwd .~ LNet
-                   & bFacing .~ LNet
-                   & bCap.capHeight .~ 2.5
+otherBaller :: Baller
+otherBaller = defaultBaller
+            & bColor .~ rgb 0.47 0 0.67
+            & bFwd .~ LNet
+            & bFacing .~ LNet
+            & bCap.capHeight .~ 2.5
 
 updateBaller :: Time
              -> Time
@@ -75,16 +76,16 @@ updateBaller now dt ctrl p b@Baller{..} = do
     velocity  = V3 (view _x dx) 0 (view _y dx)
 
     animName art _ | hasMotion = art
-    animName art (V3 0 0 0) = newAnim art "Idle"
-    animName art (V3 _ 0 _) | p == Has  = newAnim art "DribbleRun"
-                            | otherwise = newAnim art "Run"
+    animName art (V3 0 0 0) = newAnim art __ballerIdle
+    animName art (V3 _ 0 _) | p == Has  = newAnim art __ballerDribbleRun
+                            | otherwise = newAnim art __ballerRun
     animName art _ = art
 
     newAnim art name' =
-      let name = art ^. aAnim
-       in case name == name' of
+      let name = art ^. aCanned.aAnim
+       in case name == view aAnim name' of
             True -> art
-            False -> art & aAnim    .~ name'
+            False -> art & aCanned  .~ name'
                          & aStarted .~ now
 
 
@@ -144,7 +145,7 @@ updateBaller now dt ctrl p b@Baller{..} = do
 jump :: Double -> V3 -> Capsule -> Capsule
 jump jumpHeight velocity c@Capsule{..} = setMotion c . motion $ do
   runBezier 0.1 [ _capPos ] _capPos
-  emit $ PlayAnimation "JumpWithBall"
+  emit $ PlayAnimation __ballerJumpWithBall
   runBezier 0.1 [ _capPos ] _capPos
   runBezier 1 [ _capPos
                 + 2 * jumpHeight *^ unitY

@@ -5,6 +5,7 @@
 module Ball where
 
 import Art
+import AnimBank
 import Baller
 import Camera
 import Capsule
@@ -15,11 +16,11 @@ import Game.Sequoia.Color
 import JamPrelude
 import Motion
 
-defaultBall :: Schema -> Ball
-defaultBall schema = Ball
+defaultBall :: Ball
+defaultBall = Ball
   { _ballCap   = ballCapsule
   , _ballState = BallUnowned
-  , _ballArt = Art schema "ball" "Idle" 0 1 True
+  , _ballArt = Art __ball 0
   }
 
 ballCapsule :: Capsule

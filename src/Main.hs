@@ -34,14 +34,14 @@ data Game = Game
   }
 makeLenses ''Game
 
-initGame :: Schema -> Game
-initGame schema = Game
+initGame :: Game
+initGame = Game
   { _gCamera  = def
-  , _gBall    = defaultBall schema
-  , _gBallers = [ defaultBaller schema & bCap.capPos .~ V3 (-2) 0 (-2)
-                , defaultBaller schema & bCap.capPos .~ V3 (-2) 0 2
-                , otherBaller schema & bCap.capPos .~ V3 2 0 2
-                , otherBaller schema & bCap.capPos .~ V3 2 0 (-2)
+  , _gBall    = defaultBall
+  , _gBallers = [ defaultBaller & bCap.capPos .~ V3 (-2) 0 (-2)
+                , defaultBaller & bCap.capPos .~ V3 (-2) 0 2
+                , otherBaller & bCap.capPos .~ V3 2 0 2
+                , otherBaller & bCap.capPos .~ V3 2 0 (-2)
                 ]
   }
 
@@ -134,10 +134,9 @@ magic _ = do
   clock      <- getClock
   controller <- keyboardController <$> getKeyboard
   oldCtrl    <- sample $ delayTime (deltaTime clock) def controller
-  schema     <- getArt
 
   (game, _) <-
-    foldmp (initGame schema) $ \g -> do
+    foldmp initGame $ \g -> do
       now    <- sample $ totalTime clock
       dt     <- sample $ deltaTime clock
       rctrl  <- sample oldCtrl

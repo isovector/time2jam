@@ -76,7 +76,7 @@ data Action = Shoot (Capsule -> Motion)
             | Debug String
             | Point Net Int
             | TurnOver Net
-            | PlayAnimation AnimationName
+            | PlayAnimation CannedAnim
             | Pass
 
 type Machine a = Coroutine (Request V3 Double) (Writer [Action]) a
@@ -96,10 +96,6 @@ data Capsule = Capsule
   , _capMotion   :: Maybe Motion
   } deriving (Eq, Show)
 
-makePrisms ''Action
-makePrisms ''Shove
-makePrisms ''Motion
-makeLenses ''Capsule
 
 data Possession = Has
                 | Doesnt
@@ -109,7 +105,6 @@ data BallerState = BSDefault
                  | BSJumping Possession
                  | BSGrounded
                  deriving (Eq, Show, Ord)
-makePrisms ''BallerState
 
 data Stats = Stats
   { _sSpeed :: Double
@@ -118,20 +113,22 @@ data Stats = Stats
 
 instance Default Stats where
   def = Stats 5 1.5
-makeLenses ''Stats
 
-data Art = Art
+data CannedAnim = CannedAnim
   { _aSchema    :: Schema
   , _aEntity    :: EntityName
   , _aAnim      :: AnimationName
-  , _aStarted   :: Time
   , _aSpeedMult :: Double
   , _aRepeat    :: Bool
   } deriving (Eq)
-makeLenses ''Art
 
-instance Show Art where
-  show Art{..} = show (_aEntity, _aAnim, _aStarted, _aSpeedMult)
+instance Show CannedAnim where
+  show CannedAnim{..} = show (_aEntity, _aAnim, _aSpeedMult, _aRepeat)
+
+data Art = Art
+  { _aCanned  :: CannedAnim
+  , _aStarted :: Time
+  } deriving (Eq, Show)
 
 data Baller = Baller
   { _bCap    :: Capsule
@@ -143,31 +140,40 @@ data Baller = Baller
   , _bState  :: BallerState
   , _bArt    :: Art
   } deriving (Eq, Show)
-makeLenses ''Baller
 
 data BallState = BallUnowned
                | BallOwned Int
                | BallShoot Int -- ^ Shooter.
                deriving (Eq, Show)
-makePrisms ''BallState
 
 data Ball = Ball
   { _ballCap   :: Capsule
   , _ballState :: BallState
   , _ballArt   :: Art
   } deriving (Eq, Show)
-makeLenses ''Ball
 
 data GObject = BallObj Ball
              | BallerObj Int Baller
              deriving (Eq, Show)
-makePrisms ''GObject
 
 instance Ord GObject where
   compare (BallObj _)     (BallObj _)     = EQ
   compare (BallObj _)     (BallerObj _ _) = LT
   compare (BallerObj _ _) (BallObj _)     = GT
   compare (BallerObj i _) (BallerObj j _) = compare i j
+
+makePrisms ''Action
+makeLenses ''Art
+makeLenses ''Ball
+makePrisms ''BallState
+makeLenses ''Baller
+makePrisms ''BallerState
+makeLenses ''CannedAnim
+makeLenses ''Capsule
+makePrisms ''GObject
+makePrisms ''Motion
+makePrisms ''Shove
+makeLenses ''Stats
 
 isBall :: GObject -> Bool
 isBall = isJust . preview _BallObj
