@@ -9,10 +9,10 @@ import Control.Comonad
 import Control.Comonad.Store
 import Control.Lens ((+~), Lens')
 import Control.Monad.Writer
-import Data.List (nub)
-import Data.Maybe (isJust)
-import Motion
+import Data.List (nub, foldl')
+import Data.Maybe (isJust, mapMaybe)
 import JamPrelude
+import Motion
 
 moveCapsule :: V3 -> Capsule -> Capsule
 moveCapsule r3 = capPos +~ r3
@@ -106,6 +106,19 @@ updateCapsule dt c@Capsule{..}
                  & capMotion .~ motion'
   | otherwise = return c
 
+updateCapsuleAndAnim :: Time
+                     -> Time
+                     -> Art
+                     -> Capsule
+                     -> Writer [Action] (Capsule, Art)
+updateCapsuleAndAnim now dt art c = do
+  (c', w) <- censor (filter $ isn't _PlayAnimation)
+           . listen
+           $ updateCapsule dt c
+
+  let art' = foldl' (((aStarted .~ now) .) . flip (set aAnim)) art
+           $ mapMaybe (preview _PlayAnimation) w
+  return (c', art')
 
 makeMotion :: Time -> [V3] -> Capsule -> Motion
 makeMotion duration v3s c = motion

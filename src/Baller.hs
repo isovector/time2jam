@@ -36,7 +36,7 @@ defaultBaller schema = Baller
   , _bDir    = V3 0 0 0
   , _bFacing = RNet
   , _bState  = BSDefault
-  , _bArt    = Art schema "baller" "Idle" 0 1500
+  , _bArt    = Art schema "baller" "Idle" 0 1500 False
   }
 
 otherBaller :: Schema -> Baller
@@ -47,20 +47,21 @@ otherBaller schema = defaultBaller schema
                    & bCap.capHeight .~ 2.5
 
 updateBaller :: Time
+             -> Time
              -> Controller
              -> Possession
              -> Baller
              -> Writer [Action] Baller
-updateBaller dt ctrl p b@Baller{..} = do
+updateBaller now dt ctrl p b@Baller{..} = do
   tell actions
-  newCap <- cap'
+  (newCap, art') <- cap'
   let posDelta = _capPos newCap - _capPos _bCap
   return $
     b { _bCap = clampToGround newCap
       , _bDir = velocity
       , _bState = state'
       , _bFacing = facing $ view _x posDelta
-      } & bArt.aAnim .~ animName posDelta
+      } & bArt .~ animName art' posDelta
   where
     speed =
       let baseSpeed = _bStats ^. sSpeed
@@ -73,10 +74,18 @@ updateBaller dt ctrl p b@Baller{..} = do
     dx = (*^) speed $ _ctrlDir ctrl
     velocity  = V3 (view _x dx) 0 (view _y dx)
 
-    animName (V3 0 0 0) = "Idle"
-    animName (V3 _ 0 _) | p == Has  = "DribbleRun"
-                        | otherwise = "Run"
-    animName _ = "Idle"
+    animName art _ | hasMotion = art
+    animName art (V3 0 0 0) = newAnim art "Idle"
+    animName art (V3 _ 0 _) | p == Has  = newAnim art "DribbleRun"
+                            | otherwise = newAnim art "Run"
+    animName art _ = art
+
+    newAnim art name' =
+      let name = art ^. aAnim
+       in case name == name' of
+            True -> art
+            False -> art & aAnim    .~ name'
+                         & aStarted .~ now
 
 
     facing x | x < 0     = LNet
@@ -93,7 +102,7 @@ updateBaller dt ctrl p b@Baller{..} = do
 
     clampToGround = bool (capPos._y .~ 0) id hasMotion
 
-    cap' = updateCapsule dt
+    cap' = updateCapsuleAndAnim now dt _bArt
          . motion'
          $ moveCapsule (dt *^ velocity) _bCap
 
@@ -133,12 +142,15 @@ updateBaller dt ctrl p b@Baller{..} = do
               | canPass]
 
 jump :: Double -> V3 -> Capsule -> Capsule
-jump jumpHeight velocity c@Capsule{..} =
-  moveTo 1 [ _capPos
-             + 2 * jumpHeight *^ unitY
-             + 0.5 *^ velocity
-           , _capPos + velocity
-           ] c
+jump jumpHeight velocity c@Capsule{..} = setMotion c . motion $ do
+  runBezier 0.1 [ _capPos ] _capPos
+  emit $ PlayAnimation "JumpWithBall"
+  runBezier 0.1 [ _capPos ] _capPos
+  runBezier 1 [ _capPos
+                + 2 * jumpHeight *^ unitY
+                + 0.5 *^ velocity
+              , _capPos + velocity
+              ] _capPos
 
 shoot :: Net -> Capsule -> Motion
 shoot net Capsule {..} = motion $ do
@@ -148,9 +160,9 @@ shoot net Capsule {..} = motion $ do
             , netCtrlPt
             , netPos'
             ] _capPos
-    lift $ tell [Point (otherNet net) . bool 2 3 $ dist >= courtLongRadius]
+    emit . Point (otherNet net) . bool 2 3 $ dist >= courtLongRadius
     b <- runBezier 0.2 [ netPos' & _y .~ 0 ] a
-    lift $ tell [TurnOver net]
+    emit $ TurnOver net
     return b
   where
     ballVelocity = 15

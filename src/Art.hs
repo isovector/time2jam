@@ -29,8 +29,11 @@ drawArt :: Art
 drawArt Art{..} correction now =
   let Just entity = _aSchema ^. schemaEntity . at _aEntity
       Just animation = entity ^. entityAnimation . at _aAnim
-      frame = fmod (animation ^. animLength)
-                   ((now - _aStarted) * _aSpeedMult)
+      thisFrame = (now - _aStarted) * _aSpeedMult
+      totalLength = animation ^. animLength
+      frame = case _aRepeat || thisFrame <= totalLength of
+                True -> fmod totalLength thisFrame
+                False -> totalLength - 1
       sprites = makeSprites _aSchema correction
       drawBone ResultBone{..} = move (V2 _rbX $ -_rbY)
                               . rotate (-_rbAngle)

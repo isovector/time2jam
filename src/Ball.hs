@@ -19,7 +19,7 @@ defaultBall :: Schema -> Ball
 defaultBall schema = Ball
   { _ballCap   = ballCapsule
   , _ballState = BallUnowned
-  , _ballArt = Art schema "ball" "Idle" 0 1
+  , _ballArt = Art schema "ball" "Idle" 0 1 True
   }
 
 ballCapsule :: Capsule

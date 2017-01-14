@@ -63,13 +63,14 @@ duplicate :: [(a, a)] -> [(a, a)]
 duplicate as = join $ as >>= \p -> return [p , swap p]
 
 updateGame :: Time
+           -> Time
            -> [Controller]
            -> Game
            -> Writer [String] Game
-updateGame dt ctrls g = do
+updateGame now dt ctrls g = do
   let (ballers, ballerActs) = runWriter
                             $ forM (zip3 (_gBallers g) ctrls [0..]) $ \(baller, ctrl, n) ->
-                                updateBaller dt ctrl (possesses n) baller
+                                updateBaller now dt ctrl (possesses n) baller
       shotAction = find (liftM2 (||) (has _Shoot) (has _Pass)) ballerActs
 
       (hits, g') = withObjects (g & gBallers .~ ballers)
@@ -137,7 +138,8 @@ magic _ = do
 
   (game, _) <-
     foldmp (initGame schema) $ \g -> do
-      dt    <- sample $ deltaTime clock
+      now    <- sample $ totalTime clock
+      dt     <- sample $ deltaTime clock
       rctrl  <- sample oldCtrl
       rctrl' <- sample controller
       let ctrl = foldController rctrl rctrl'
@@ -145,7 +147,7 @@ magic _ = do
                               (maybe 0 id $ preview (gBall.ballState._BallOwned) g)
                               ctrl
           (game', msgs) = runWriter
-                        $ updateGame dt controllers g
+                        $ updateGame now dt controllers g
       liftIO $ forM_ msgs putStrLn
       return game'
 

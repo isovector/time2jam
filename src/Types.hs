@@ -76,6 +76,7 @@ data Action = Shoot (Capsule -> Motion)
             | Debug String
             | Point Net Int
             | TurnOver Net
+            | PlayAnimation AnimationName
             | Pass
 
 type Machine a = Coroutine (Request V3 Double) (Writer [Action]) a
@@ -125,6 +126,7 @@ data Art = Art
   , _aAnim      :: AnimationName
   , _aStarted   :: Time
   , _aSpeedMult :: Double
+  , _aRepeat    :: Bool
   } deriving (Eq)
 makeLenses ''Art
 

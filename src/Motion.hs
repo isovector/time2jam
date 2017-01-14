@@ -3,15 +3,18 @@
 
 module Motion where
 
-import Types
-import Game.Sequoia
 import Bezier
-import Control.Monad.Writer
 import Control.Monad.Coroutine
 import Control.Monad.Coroutine.SuspensionFunctors
+import Control.Monad.Writer
+import Game.Sequoia
+import JamPrelude
 
 motion :: Machine V3 -> Motion
 motion = Motion . const
+
+emit :: Action -> Machine ()
+emit = lift . tell . pure
 
 runBezier :: Time -> [V3] -> V3 -> Machine V3
 runBezier duration v3s pos = do
@@ -21,9 +24,7 @@ runBezier duration v3s pos = do
   where
     loop b t = do
       dt <- request $ b (t / duration)
-      case dt + t >= duration of
-         True  -> return ()
-         False -> loop b (dt + t)
+      when (dt + t < duration) . loop b $ dt + t
 
 velBezier :: Double -> [V3] -> V3 -> Machine V3
 velBezier velocity v3s pos = runBezier (bezierDuration velocity v3s pos) v3s pos
