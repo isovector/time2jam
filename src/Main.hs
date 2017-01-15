@@ -7,6 +7,7 @@
 
 module Main where
 
+import AnimBank
 import Ball
 import Baller
 import Basket
@@ -104,14 +105,18 @@ updateGame now dt ctrls g = do
         ballers' = do
           (baller, i) <- zip (_gBallers g'') [0..]
           return $ baller & bCap.capMotion .~ Just (
-            motion $ velBezier ( baller ^. bStats.sSpeed
-                               * baller ^. bStats.sTurboMult
-                               )
-                   [ (bool turnoverDefPos
-                           turnoverOffPos
-                           $ isOff baller
-                     ) (i `mod` 2) net
-                   ] $ baller ^. bCap.capPos
+            motion $ do
+              let pos = baller ^. bCap.capPos
+              wait 0 pos
+              emit $ PlayAnimation __bRun
+              velBezier ( baller ^. bStats.sSpeed
+                          * baller ^. bStats.sTurboMult
+                        )
+                [ (bool turnoverDefPos
+                        turnoverOffPos
+                        $ isOff baller
+                  ) (i `mod` 2) net
+                ] $ pos
             )
      in g'' & gBallers .~ ballers'
 
