@@ -16,6 +16,12 @@ motion = Motion . const
 emit :: Action -> Machine ()
 emit = lift . tell . pure
 
+wait :: Time -> V3 -> Machine ()
+wait duration pos =
+  when (duration >= 0) $ do
+    dt <- request pos
+    wait (duration - dt) pos
+
 runBezier :: Time -> [V3] -> V3 -> Machine V3
 runBezier duration v3s pos = do
     let b = bezier $ pos : v3s

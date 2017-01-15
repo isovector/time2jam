@@ -28,8 +28,8 @@ drawArt :: Art
 drawArt Art{ _aCanned = CannedAnim{..}
            , _aStarted
            } correction now =
-  let Just entity = _aSchema ^. schemaEntity . at _aEntity
-      Just animation = entity ^. entityAnimation . at _aAnim
+  let Just entity    = _aSchema ^. schemaEntity    . at _aEntity
+      Just animation = entity   ^. entityAnimation . at _aAnim
       thisFrame = (now - _aStarted) * _aSpeedMult
       totalLength = animation ^. animLength
       frame = case _aRepeat || thisFrame <= totalLength of

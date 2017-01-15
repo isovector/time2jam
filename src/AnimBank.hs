@@ -32,3 +32,4 @@ __ballerDribbleRun = CannedAnim schema "baller" "DribbleRun" 1500 True
 
 __ballerRun :: CannedAnim
 __ballerRun = CannedAnim schema "baller" "Run" 1500 True
+

@@ -90,10 +90,6 @@ updateBall dt hit ballers action b@Ball{..} = do
                   + (passTime *^ _bDir + ballerBallHeight teammate)
                 ] $ _capPos c + ballerBallHeight owner
 
-
-orange :: Color
-orange = rgb 0.98 0.51 0.13
-
 drawBall :: Camera -> Maybe Baller -> Ball -> Form
 drawBall _ (Just _) _ = group []
 drawBall cam Nothing Ball{_ballCap, _ballArt} =

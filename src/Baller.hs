@@ -144,9 +144,9 @@ updateBaller now dt ctrl p b@Baller{..} = do
 
 jump :: Double -> V3 -> Capsule -> Capsule
 jump jumpHeight velocity c@Capsule{..} = setMotion c . motion $ do
-  runBezier 0.1 [ _capPos ] _capPos
+  wait 0 _capPos
   emit $ PlayAnimation __ballerJumpWithBall
-  runBezier 0.1 [ _capPos ] _capPos
+  wait 0.2 _capPos
   runBezier 1 [ _capPos
                 + 2 * jumpHeight *^ unitY
                 + 0.5 *^ velocity
@@ -183,7 +183,7 @@ shoot net Capsule {..} = motion $ do
 
 dunk :: Net -> Capsule -> Capsule
 dunk net c@Capsule{..} = setMotion c . motion $ do
-    runBezier 0.1 [ _capPos ] _capPos
+    wait 0.1 _capPos
     emit $ PlayAnimation __ballerPreDunk
     runBezier 0.7 [ jumpCtrlPt
                   , netCtrlPt
