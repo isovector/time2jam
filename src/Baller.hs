@@ -124,15 +124,17 @@ updateBaller now dt ctrl p b@Baller{..} = do
            && p == Has
 
     state' =
-      case (_bState, p, hasMotion, canJump) of
-        (BSJumping Has,    Has,    False, _)     -> BSGrounded
-        (BSJumping Doesnt, Has,    _,     _)     -> BSJumping Doesnt
-        (BSJumping _,      Doesnt, False, _)     -> BSDefault
-        (BSGrounded,       Doesnt, False, _)     -> BSDefault
-        (bs,               _,      True,  _)     -> bs
-        (_,                pos,    False, True)  -> BSJumping pos
-        (BSGrounded,       Has,    False, False) -> BSGrounded
-        (BSDefault,        _,      False, False) -> BSDefault
+      case (_bState, p, hasMotion, canJump, shouldDunk) of
+        (BSJumping Has,    Has,    False, _,     _)    -> BSGrounded
+        (BSJumping Doesnt, Has,    _,     _,     _)    -> BSJumping Doesnt
+        (BSJumping _,      Doesnt, False, _,     _)    -> BSDefault
+        (BSGrounded,       Doesnt, False, _,     _)    -> BSDefault
+        (BSDunking,        _,      False, _,     _)    -> BSDefault
+        (bs,               _,      True,  _,     _)    -> bs
+        (_,                _,      False, True,  True) -> BSDunking
+        (_,                pos,    False, True,  _)    -> BSJumping pos
+        (BSGrounded,       Has,    False, False, _)    -> BSGrounded
+        (BSDefault,        _,      False, False, _)    -> BSDefault
 
     motion' = bool id jumpAction canJump
     actions = [Shoot $ shoot _bFwd

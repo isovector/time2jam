@@ -103,6 +103,7 @@ data Possession = Has
 
 data BallerState = BSDefault
                  | BSJumping Possession
+                 | BSDunking
                  | BSGrounded
                  deriving (Eq, Show, Ord)
 
