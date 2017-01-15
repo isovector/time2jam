@@ -27,13 +27,6 @@ import Input
 import JamPrelude
 import Motion
 
-data Game = Game
-  { _gCamera  :: Camera
-  , _gBall    :: Ball
-  , _gBallers :: [Baller]
-  }
-makeLenses ''Game
-
 initGame :: Game
 initGame = Game
   { _gCamera  = def
@@ -43,6 +36,7 @@ initGame = Game
                 , otherBaller & bCap.capPos .~ V3 2 0 2
                 , otherBaller & bCap.capPos .~ V3 2 0 (-2)
                 ]
+  , _gMode = Play
   }
 
 withObjects :: (Monad m) => Game -> ([GObject] -> m [GObject]) -> m Game
@@ -59,8 +53,8 @@ withObjects g@Game{..} f = do
 ownerToBaller :: Int -> Game -> Baller
 ownerToBaller n = (!! n) . _gBallers
 
-duplicate :: [(a, a)] -> [(a, a)]
-duplicate as = join $ as >>= \p -> return [p , swap p]
+duplicateAndSwap :: [(a, a)] -> [(a, a)]
+duplicateAndSwap as = join $ as >>= \p -> return [p , swap p]
 
 updateGame :: Time
            -> Time
@@ -79,7 +73,7 @@ updateGame now dt ctrls g = do
       camera' = updateCam dt
               $ _gCamera g
               & camFocus .~ view (ballCap . capPos) ball
-      allHits  = duplicate hits
+      allHits  = duplicateAndSwap hits
       ballHits = fmap snd $ filter (isBall . fst) allHits
       (ball', ballActs) =
         runWriter $
@@ -99,7 +93,7 @@ updateGame now dt ctrls g = do
   handleActions allActs _Point $ \(n, p) ->
     tell . pure $ show p <> " points for " <> show n
 
-  return $ onAction allActs _TurnOver g'' $ \net ->
+  return $ onAction allActs (_ChangeGameMode._TurnOver) g'' $ \net ->
     let (off, _) = partition ((== net) . view bFwd) $ _gBallers g''
         isOff = flip elem off
         ballers' = do

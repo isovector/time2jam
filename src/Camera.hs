@@ -18,21 +18,6 @@ projection = perspective (15 * pi / 180)
                          5
                          35
 
-
-data Camera = Camera
-  { _camFocus     :: V3
-  , _camPos       :: V3
-  , _camSpeed     :: Double
-  , _camDeadzone  :: Double
-  }
-makeLenses ''Camera
-
-instance Default Camera where
-  def = Camera (V3 0 0 0)
-               (V3 0 0 0)
-               3
-               50
-
 moveCamera :: V3 -> Camera -> Camera
 moveCamera dx = camFocus +~ dx
 

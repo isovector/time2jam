@@ -170,7 +170,7 @@ shoot net Capsule {..} = motion $ do
             ] _capPos
     emit . Point (otherNet net) . bool 2 3 $ dist >= courtLongRadius
     b <- runBezier 0.2 [ netPos' & _y .~ 0 ] a
-    emit $ TurnOver net
+    emit $ ChangeGameMode $ TurnOver net
     return b
   where
     ballVelocity = 15
