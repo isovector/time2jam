@@ -76,7 +76,8 @@ updateBaller now dt ctrl p b@Baller{..} = do
     velocity  = V3 (view _x dx) 0 (view _y dx)
 
     animName art _ | hasMotion = art
-    animName art (V3 0 0 0) = newAnim art __bIdle
+    animName art (V3 0 0 0) | p == Has  = newAnim art __bDribble
+                            | otherwise = newAnim art __bIdle
     animName art (V3 _ 0 _) | p == Has  = newAnim art __bDribbleRun
                             | otherwise = newAnim art __bRun
     animName art _ = art

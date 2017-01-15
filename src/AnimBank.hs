@@ -28,6 +28,9 @@ __bPreDunk = CannedAnim schema "baller" "PreDunk" 1500 False
 __bJumpWithBall :: CannedAnim
 __bJumpWithBall = CannedAnim schema "baller" "JumpWithBall" 1500 False
 
+__bDribble :: CannedAnim
+__bDribble = CannedAnim schema "baller" "Dribble" 1500 True
+
 __bDribbleRun :: CannedAnim
 __bDribbleRun = CannedAnim schema "baller" "DribbleRun" 1500 True
 

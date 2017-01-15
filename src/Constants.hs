@@ -3,14 +3,8 @@ module Constants where
 courtLength :: Double
 courtLength = 28
 
-courtGfxLength :: Double
-courtGfxLength = 1800
-
 courtDepth :: Double
 courtDepth = 15
-
-courtGfxDepth :: Double
-courtGfxDepth = 300
 
 courtBasketOffset :: Double
 courtBasketOffset = 1.575
