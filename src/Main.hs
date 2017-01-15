@@ -9,14 +9,10 @@ module Main where
 
 import Ball
 import Baller
-import Basket
 import Constants
 import Control.FRPNow.Time (delayTime)
 import Control.Lens
 import Control.Monad.Writer (runWriter)
-import Court
-import Data.List (sortBy)
-import Data.Ord (comparing)
 import Game.Sequoia.Keyboard
 import Input
 import JamPrelude
@@ -34,8 +30,8 @@ initGame = Game
   , _gMode = Play
   }
 
-render :: Engine -> N (B Element)
-render _ = do
+runGame :: Engine -> N (B Element)
+runGame _ = do
   clock      <- getClock
   controller <- keyboardController <$> getKeyboard
   oldCtrl    <- sample $ delayTime (deltaTime clock) def controller
@@ -46,33 +42,28 @@ render _ = do
       dt     <- sample $ deltaTime clock
       rctrl  <- sample oldCtrl
       rctrl' <- sample controller
+
       let ctrl = foldController rctrl rctrl'
-          controllers = setAt (replicate 4 $ Controller (V2 0 0) False Nothing)
-                              (maybe 0 id $ preview (gBall.ballState._BallOwned) g)
-                              ctrl
-          (game', msgs) = runWriter
-                        $ updateGame now dt controllers g
-      liftIO $ forM_ msgs putStrLn
-      return game'
+          controllers =
+            setAt (replicate 4 $ Controller (V2 0 0) False Nothing)
+                  (maybe 0 id $ preview (gBall.ballState._BallOwned) g)
+                  ctrl
+
+      case _gMode g of
+        Play -> do
+              (game', msgs) = runWriter
+                            $ updatePlay now dt controllers g
+          liftIO $ forM_ msgs putStrLn
+          return game'
 
   return $ do
-    g@Game {..} <- sample game
-    let cam = _gCamera
-    now <- sample $ totalTime clock
-
-    return $ centeredCollage (round gameWidth) (round gameHeight) $
-           [ drawCourt court cam
-           , drawBasket cam RNet
-           , drawBasket cam LNet
-           , drawBall cam
-                      (flip ownerToBaller g
-                          <$> preview (ballState._BallOwned) _gBall)
-                      _gBall
-           ] ++ fmap (drawBaller cam now) (sortBy (comparing $ view $ bCap.capPos._z) _gBallers)
+    game' <- sample game
+    case _gMode game' of
+      _ -> renderPlay clock game'
 
 
 main :: IO ()
-main = play config render return
+main = play config runGame return
   where
     config = EngineConfig (round gameWidth, round gameHeight)
                           "Time 2 Jam"

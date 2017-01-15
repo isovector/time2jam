@@ -1,6 +1,10 @@
+{-# LANGUAGE RecordWildCards #-}
+
 module ModeGame where
 
 import AnimBank
+import Court
+import Constants
 import Ball
 import Baller
 import Basket
@@ -9,17 +13,19 @@ import Capsule
 import Control.Lens
 import Control.Monad.Writer (Writer, runWriter, tell)
 import Data.List (find, partition)
+import Data.List (sortBy)
 import Data.Maybe (listToMaybe, mapMaybe)
+import Data.Ord (comparing)
 import Data.Tuple (swap)
 import JamPrelude
 import Motion
 
-updateGame :: Time
+updatePlay :: Time
            -> Time
            -> [Controller]
            -> Game
            -> Writer [String] Game
-updateGame now dt ctrls g = do
+updatePlay now dt ctrls g = do
   let (ballers, ballerActs) = runWriter
                             $ forM (zip3 (_gBallers g) ctrls [0..]) $ \(baller, ctrl, n) ->
                                 updateBaller now dt ctrl (possesses n) baller
@@ -79,4 +85,20 @@ updateGame now dt ctrls g = do
    possesses i = maybe Doesnt
                        (bool Doesnt Has . (== i))
                        $ preview (ballState._BallOwned) $ _gBall g
+
+renderPlay :: Clock -> Game -> B Element
+renderPlay clock g@Game {..} = do
+    let cam = _gCamera
+    now <- sample $ totalTime clock
+
+    return $ centeredCollage (round gameWidth) (round gameHeight) $
+           [ drawCourt court cam
+           , drawBasket cam RNet
+           , drawBasket cam LNet
+           , drawBall cam
+                      (flip ownerToBaller g
+                          <$> preview (ballState._BallOwned) _gBall)
+                      _gBall
+           ] ++ fmap (drawBaller cam now)
+                     (sortBy (comparing $ view $ bCap.capPos._z) _gBallers)
 
