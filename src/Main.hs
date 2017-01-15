@@ -7,7 +7,6 @@
 
 module Main where
 
-import Art
 import Ball
 import Baller
 import Basket

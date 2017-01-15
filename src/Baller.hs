@@ -37,7 +37,7 @@ defaultBaller = Baller
   , _bDir    = V3 0 0 0
   , _bFacing = RNet
   , _bState  = BSDefault
-  , _bArt    = Art __ballerIdle 0
+  , _bArt    = Art __bIdle 0
   }
 
 otherBaller :: Baller
@@ -76,9 +76,9 @@ updateBaller now dt ctrl p b@Baller{..} = do
     velocity  = V3 (view _x dx) 0 (view _y dx)
 
     animName art _ | hasMotion = art
-    animName art (V3 0 0 0) = newAnim art __ballerIdle
-    animName art (V3 _ 0 _) | p == Has  = newAnim art __ballerDribbleRun
-                            | otherwise = newAnim art __ballerRun
+    animName art (V3 0 0 0) = newAnim art __bIdle
+    animName art (V3 _ 0 _) | p == Has  = newAnim art __bDribbleRun
+                            | otherwise = newAnim art __bRun
     animName art _ = art
 
     newAnim art name' =
@@ -145,7 +145,7 @@ updateBaller now dt ctrl p b@Baller{..} = do
 jump :: Double -> V3 -> Capsule -> Capsule
 jump jumpHeight velocity c@Capsule{..} = setMotion c . motion $ do
   wait 0 _capPos
-  emit $ PlayAnimation __ballerJumpWithBall
+  emit $ PlayAnimation __bJumpWithBall
   wait 0.2 _capPos
   runBezier 1 [ _capPos
                 + 2 * jumpHeight *^ unitY
@@ -184,7 +184,7 @@ shoot net Capsule {..} = motion $ do
 dunk :: Net -> Capsule -> Capsule
 dunk net c@Capsule{..} = setMotion c . motion $ do
     wait 0.1 _capPos
-    emit $ PlayAnimation __ballerPreDunk
+    emit $ PlayAnimation __bPreDunk
     runBezier 0.7 [ jumpCtrlPt
                   , netCtrlPt
                   , netPos'
@@ -203,8 +203,6 @@ dunk net c@Capsule{..} = setMotion c . motion $ do
                ]
     netCtrlPt = 2 *^ netDir + dunkCtrl + netPos'
     netPos' = netPos net
-
-
 
 drawBaller :: Camera -> Time -> Baller -> Form
 drawBaller cam now b@Baller{..} =
