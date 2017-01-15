@@ -159,7 +159,7 @@ magic _ = do
     let cam = _gCamera
     now <- sample $ totalTime clock
 
-    return $ centeredCollage 700 400 $
+    return $ centeredCollage (round gameWidth) (round gameHeight) $
            [ drawCourt court cam
            , drawBasket cam RNet
            , drawBasket cam LNet

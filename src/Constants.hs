@@ -44,3 +44,4 @@ gameHeight = 400
 
 standardBallerHeight :: Double
 standardBallerHeight = 2
+
