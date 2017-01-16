@@ -140,7 +140,7 @@ data Game = Game
 
 ------------------------------------------------------------------------------
 data GameMode = Play
-              | TurnOver Net
+              | TurnOver Net Bool  -- ^ Sent motion or not.
               | TipOff
               deriving (Eq, Show)
 

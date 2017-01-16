@@ -5,7 +5,6 @@
 module Camera where
 
 import Control.Lens ((+~))
-import Data.Default
 import Constants
 import JamPrelude
 import Linear.Projection

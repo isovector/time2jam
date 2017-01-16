@@ -51,10 +51,12 @@ runGame _ = do
 
       case _gMode g of
         Play -> do
-              (game', msgs) = runWriter
+          let (game', msgs) = runWriter
                             $ updatePlay now dt controllers g
           liftIO $ forM_ msgs putStrLn
           return game'
+        TurnOver net False -> return $ sendTurnoverMovement net g
+        TurnOver _ True    -> return $ justChill now dt g
 
   return $ do
     game' <- sample game

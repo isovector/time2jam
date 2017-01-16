@@ -5,8 +5,8 @@
 
 module Baller where
 
-import Art
 import AnimBank
+import Art
 import Basket
 import Camera
 import Capsule
@@ -42,27 +42,58 @@ defaultBaller = Baller
 
 otherBaller :: Baller
 otherBaller = defaultBaller
-            & bColor .~ rgb 0.47 0 0.67
-            & bFwd .~ LNet
-            & bFacing .~ LNet
+            & bColor         .~ rgb 0.47 0 0.67
+            & bFwd           .~ LNet
+            & bFacing        .~ LNet
             & bCap.capHeight .~ 2.5
+
+data BallerGameMode = PlayBaller Controller Possession
+                    | TurnOverBaller
+
+
+facing :: Net -> Double -> Net
+facing f x | x < 0     = LNet
+           | x > 0     = RNet
+           | otherwise = f
+
+newAnim :: Time -> CannedAnim -> Art -> Art
+newAnim now name' art =
+  let name = art ^. aCanned.aAnim
+   in case name == view aAnim name' of
+        True -> art
+        False -> art & aCanned  .~ name'
+                     & aStarted .~ now
 
 updateBaller :: Time
              -> Time
-             -> Controller
-             -> Possession
+             -> BallerGameMode
              -> Baller
              -> Writer [Action] Baller
-updateBaller now dt ctrl p b@Baller{..} = do
+updateBaller now dt TurnOverBaller b@Baller{..} = do
+  newCap <- updateCapsule dt _bCap
+  let posDelta = _capPos newCap - _capPos _bCap
+  return $
+    b & bCap    .~ (newCap & capPos._y .~ 0)
+      & bState  .~ BSDefault
+      & bFacing .~ (facing _bFacing $ view _x posDelta)
+      & bArt    .~
+          ( flip (newAnim now) _bArt
+          $ case b ^. bCap.capMotion of
+              Just _ -> __bRun
+              Nothing -> __bIdle
+          )
+
+updateBaller now dt (PlayBaller ctrl p) b@Baller{..} = do
   tell actions
   (newCap, art') <- cap'
   let posDelta = _capPos newCap - _capPos _bCap
   return $
-    b { _bCap = clampToGround newCap
-      , _bDir = velocity
-      , _bState = state'
-      , _bFacing = facing $ view _x posDelta
-      } & bArt .~ animName art' posDelta
+    b & bCap    .~ clampToGround newCap
+      & bDir    .~ velocity
+      & bState  .~ state'
+      & bFacing .~ (facing _bFacing $ view _x posDelta)
+      & bArt    .~ animName art' posDelta
+
   where
     speed =
       let baseSpeed = _bStats ^. sSpeed
@@ -76,23 +107,12 @@ updateBaller now dt ctrl p b@Baller{..} = do
     velocity  = V3 (view _x dx) 0 (view _y dx)
 
     animName art _ | hasMotion = art
-    animName art (V3 0 0 0) | p == Has  = newAnim art __bDribble
-                            | otherwise = newAnim art __bIdle
-    animName art (V3 _ 0 _) | p == Has  = newAnim art __bDribbleRun
-                            | otherwise = newAnim art __bRun
+    animName art (V3 0 0 0) | p == Has  = newAnim now __bDribble art
+                            | otherwise = newAnim now __bIdle art
+    animName art (V3 _ 0 _) | p == Has  = newAnim now __bDribbleRun art
+                            | otherwise = newAnim now __bRun art
     animName art _ = art
 
-    newAnim art name' =
-      let name = art ^. aCanned.aAnim
-       in case name == view aAnim name' of
-            True -> art
-            False -> art & aCanned  .~ name'
-                         & aStarted .~ now
-
-
-    facing x | x < 0     = LNet
-             | x > 0     = RNet
-             | otherwise = _bFacing
 
     hasMotion = isJust $ view capMotion _bCap
     jumpAction = bool (jump 1.5 velocity)
@@ -170,7 +190,7 @@ shoot net Capsule {..} = motion $ do
             ] _capPos
     emit . Point (otherNet net) . bool 2 3 $ dist >= courtLongRadius
     b <- runBezier 0.2 [ netPos' & _y .~ 0 ] a
-    emit $ ChangeGameMode $ TurnOver net
+    emit $ ChangeGameMode $ TurnOver net False
     return b
   where
     ballVelocity = 15
