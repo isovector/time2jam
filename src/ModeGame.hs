@@ -72,7 +72,7 @@ waitForMotion now dt g@Game{_gBallers, _gMode} =
   let (ballers, _) = runWriter
                    . forM _gBallers
                    $ updateBaller now dt TurnOverBaller
-      finished = all (isJust . view (bCap.capMotion)) ballers
+      finished = any (isJust . view (bCap.capMotion)) ballers
 
    in g & gBallers .~ ballers
         & gMode .~ bool Play _gMode finished
