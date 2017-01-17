@@ -56,7 +56,7 @@ runGame _ = do
           liftIO $ forM_ msgs putStrLn
           return game'
         TurnOver net False -> return $ sendTurnoverMovement net g
-        TurnOver _ True    -> return $ justChill now dt g
+        TurnOver _ True    -> return $ waitForMotion now dt g
 
   return $ do
     game' <- sample game

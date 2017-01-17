@@ -67,12 +67,13 @@ updatePlay now dt ctrls g = do
                        (bool Doesnt Has . (== i))
                        $ preview (ballState._BallOwned) $ _gBall g
 
-justChill :: Time -> Time ->  Game -> Game
-justChill now dt g@Game{_gBallers, _gMode} =
+waitForMotion :: Time -> Time ->  Game -> Game
+waitForMotion now dt g@Game{_gBallers, _gMode} =
   let (ballers, _) = runWriter
                    . forM _gBallers
                    $ updateBaller now dt TurnOverBaller
       finished = all (isJust . view (bCap.capMotion)) ballers
+
    in g & gBallers .~ ballers
         & gMode .~ bool Play _gMode finished
 
