@@ -174,6 +174,7 @@ data Net = LNet
 
 ------------------------------------------------------------------------------
 data Possession = Has
+                | Opponent
                 | Doesnt
                 deriving (Eq, Show, Ord, Bounded, Enum)
 

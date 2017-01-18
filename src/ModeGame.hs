@@ -3,6 +3,7 @@
 
 module ModeGame where
 
+import Data.Bits (xor)
 import AnimBank
 import Ball
 import Baller
@@ -64,8 +65,11 @@ updatePlay now dt ctrls g = do
    handleActions acts p f = forM (getActions acts p) f
    onAction acts p g_ f = maybe g_ f . listToMaybe $ getActions acts p
    possesses i = maybe Doesnt
-                       (bool Doesnt Has . (== i))
+                       (isOwner i)
                        $ preview (ballState._BallOwned) $ _gBall g
+   isOwner i j | i == j           = Has
+               | (i `xor` 1) /= j = Opponent
+               | otherwise        = Doesnt
 
 waitForMotion :: Time -> Time ->  Game -> Game
 waitForMotion now dt g@Game{_gBallers, _gMode} =

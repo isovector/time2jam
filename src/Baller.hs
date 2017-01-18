@@ -45,7 +45,7 @@ otherBaller = defaultBaller
             & bColor         .~ rgb 0.47 0 0.67
             & bFwd           .~ LNet
             & bFacing        .~ LNet
-            & bCap.capHeight .~ 2.5
+            & bCap.capHeight .~ 2.2
 
 data BallerGameMode = PlayBaller Controller Possession
                     | TurnOverBaller
@@ -106,13 +106,14 @@ updateBaller now dt (PlayBaller ctrl p) b@Baller{..} = do
     dx = (*^) speed $ _ctrlDir ctrl
     velocity  = V3 (view _x dx) 0 (view _y dx)
 
-    animName art _ | canShoot = newAnim now __bShoot art
-    animName art _ | hasMotion = art
-    animName art (V3 0 0 0) | p == Has  = newAnim now __bDribble art
-                            | otherwise = newAnim now __bIdle art
-    animName art (V3 _ 0 _) | p == Has  = newAnim now __bDribbleRun art
-                            | otherwise = newAnim now __bRun art
-    animName art _ = art
+    animName art _ | canShoot               = newAnim now __bShoot art
+    animName art _ | hasMotion              = art
+    animName art (V3 0 0 0) | p == Has      = newAnim now __bDribble art
+                            | p == Opponent = newAnim now __bDefense art
+                            | otherwise     = newAnim now __bIdle art
+    animName art (V3 _ 0 _) | p == Has      = newAnim now __bDribbleRun art
+                            | otherwise     = newAnim now __bRun art
+    animName art _                          = art
 
 
     hasMotion = isJust $ view capMotion _bCap
@@ -184,7 +185,7 @@ jump jumpHeight velocity c@Capsule{..} = setMotion c . motion $ do
 shoot :: Net -> Capsule -> Motion
 shoot net Capsule {..} = motion $ do
     let dist = norm $ (_capPos & _y .~ 0) - basketGroundPos net
-    wait 0.05 _capPos
+    wait 0.15 _capPos
     a <- velBezier ballVelocity
             [ jumpCtrlPt
             , netCtrlPt
