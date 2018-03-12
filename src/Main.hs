@@ -60,8 +60,10 @@ runGame _ = do
             TurnOver net False -> pure $ sendTurnoverMovement net g
             TurnOver _ True    -> pure $ waitForMotion now dt g
 
-        x@(OnMoon {..}) -> do
-          pure $ x & gsProgress +~ dt
+        x@(OnMoon {..}) ->
+          pure $ case _gsProgress >= pi * 2 of
+            True -> InGame $ _gsOldGame
+            False -> x & gsProgress +~ dt
 
   pure $ sample game >>= \case
     InGame g     -> renderPlay clock g
