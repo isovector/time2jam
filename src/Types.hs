@@ -130,6 +130,17 @@ instance Ord GObject where
 
 
 ------------------------------------------------------------------------------
+data GameState
+  = InGame Game
+  | OnMoon
+    { _gsOldGame  :: Game
+    , _gsBaller   :: Baller
+    , _gsProgress :: Time
+    }
+
+
+
+------------------------------------------------------------------------------
 data Game = Game
   { _gCamera  :: Camera
   , _gBall    :: Ball
@@ -141,7 +152,6 @@ data Game = Game
 ------------------------------------------------------------------------------
 data GameMode = Play
               | TurnOver Net Bool  -- ^ Sent motion or not.
-              | TipOff
               deriving (Eq, Show)
 
 
@@ -222,6 +232,7 @@ makeLenses ''Capsule
 makePrisms ''GObject
 makeLenses ''Game
 makePrisms ''GameMode
+makeLenses ''GameState
 makePrisms ''Motion
 makePrisms ''Shove
 makeLenses ''Stats

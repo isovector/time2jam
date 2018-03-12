@@ -5,6 +5,7 @@ module ModeGame where
 
 import Data.Bits (xor)
 import AnimBank
+import Art
 import Ball
 import Baller
 import Basket
@@ -107,25 +108,35 @@ sendTurnoverMovement net g =
 
 renderPlay :: Clock -> Game -> B Element
 renderPlay clock g@Game {..} = do
-    let cam = _gCamera
-    now <- sample $ totalTime clock
+  let cam = _gCamera
+  now <- sample $ totalTime clock
 
-    return . centeredCollage (round gameWidth) (round gameHeight) $
-           [ drawMoonDunk
-           , drawCourt court cam
-           , drawBasket cam RNet
-           , drawBasket cam LNet
-           , drawBall cam
-                      (flip ownerToBaller g
-                          <$> preview (ballState._BallOwned) _gBall)
-                      _gBall
-           ] ++ fmap (drawBaller cam now)
-                     (sortBy (comparing $ view $ bCap.capPos._z) _gBallers)
+  pure . centeredCollage (round gameWidth) (round gameHeight) $
+       [ drawCourt court cam
+       , drawBasket cam RNet
+       , drawBasket cam LNet
+       , drawBall cam
+                  (flip ownerToBaller g
+                      <$> preview (ballState._BallOwned) _gBall)
+                  _gBall
+       ] ++ fmap (drawBaller cam now)
+                 (sortBy (comparing . view $ bCap.capPos._z) _gBallers)
 
-drawMoonDunk :: Form
-drawMoonDunk = group
-  [ filled (rgb 0 0 0) $ rect gameWidth gameHeight
-  , toForm $ image "art/moon.png"
-  ]
 
+drawMoonDunk :: Baller -> Time -> B Element
+drawMoonDunk b@Baller{..} t = do
+  let theta = pi - t / 2
+      x = cos theta * gameWidth / 3
+      y = negate $ sin theta * gameHeight / 2
+
+  pure $ centeredCollage (round gameWidth)
+                         (round gameHeight)
+       [ filled (rgb 0 0 0) $ rect gameWidth gameHeight
+       , toForm $ image "art/moon.png"
+       , move (V2 x y)
+         . move (V2 0 $ gameHeight / 1.5)
+         . rotate (negate theta + pi / 4 + pi / 6)
+         . scale 0.1
+         $ drawArt (Art __bPreDunk 0) (Just _bColor) 0
+       ]
 
