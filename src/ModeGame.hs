@@ -111,7 +111,8 @@ renderPlay clock g@Game {..} = do
     now <- sample $ totalTime clock
 
     return . centeredCollage (round gameWidth) (round gameHeight) $
-           [ drawCourt court cam
+           [ drawMoonDunk
+           , drawCourt court cam
            , drawBasket cam RNet
            , drawBasket cam LNet
            , drawBall cam
@@ -120,4 +121,11 @@ renderPlay clock g@Game {..} = do
                       _gBall
            ] ++ fmap (drawBaller cam now)
                      (sortBy (comparing $ view $ bCap.capPos._z) _gBallers)
+
+drawMoonDunk :: Form
+drawMoonDunk = group
+  [ filled (rgb 0 0 0) $ rect gameWidth gameHeight
+  , toForm $ image "art/moon.png"
+  ]
+
 

@@ -152,13 +152,13 @@ updateBaller now dt (PlayBaller ctrl p) b@Baller{..} = do
       case (_bState, p, hasMotion, actionType) of
         (BSJumping Has,    Has,    False, _)    -> BSGrounded
         (BSJumping Doesnt, Has,    _,     _)    -> BSJumping Doesnt
-        (BSJumping _,      Doesnt, False, _)    -> BSDefault
-        (BSGrounded,       Doesnt, False, _)    -> BSDefault
+        (BSJumping _,      _, False, _)    -> BSDefault
         (BSDunking,        _,      False, _)    -> BSDefault
         (bs,               _,      True,  _)    -> bs
         (_,                _,      False, Dunk) -> BSDunking
         (_,                pos,    False, Jump) -> BSJumping pos
         (BSGrounded,       Has,    False, None) -> BSGrounded
+        (BSGrounded,       _,      False, _)    -> BSDefault
         (BSDefault,        _,      False, None) -> BSDefault
 
     motion' = bool id jumpAction canJump
