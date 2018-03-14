@@ -26,6 +26,12 @@ bezier' ps  = do p <- bezier' (init ps)
 bezier :: [V3] -> Double -> V3
 bezier = (fromComponents .) . bezier' . fmap getComponents
 
+-- fuck algebraic solutions
+derivative :: (Double -> V3) -> Double -> V3
+derivative f x =
+  let epsilon = 0.00001
+   in (f (x + epsilon) - f x) ^* (1 / epsilon)
+
 getComponents :: V3 -> [Double]
 getComponents (V3 x y z) = [x, y, z]
 getComponents _ = undefined
