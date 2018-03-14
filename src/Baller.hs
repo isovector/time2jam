@@ -214,7 +214,7 @@ shoot net Capsule {..} = motion $ do
 dunk :: Net -> Capsule -> Capsule
 dunk net c@Capsule{..} = setMotion c . motion $ do
     wait 0.1 _capPos
-    emit $ PlayAnimation __bPreDunk
+    emit $ PlayAnimation __bPreDunk2
     runBezier 0.7 [ jumpCtrlPt
                   , netCtrlPt
                   , netPos'

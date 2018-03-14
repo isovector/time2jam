@@ -28,6 +28,9 @@ __bDefense = CannedAnim schema "baller" "Defense" 1 False
 __bPreDunk :: CannedAnim
 __bPreDunk = CannedAnim schema "baller" "PreDunk" 1500 False
 
+__bPreDunk2 :: CannedAnim
+__bPreDunk2 = CannedAnim schema "baller" "PreDunk_2" 1500 False
+
 __bJumpWithBall :: CannedAnim
 __bJumpWithBall = CannedAnim schema "baller" "JumpWithBall" 1500 False
 
