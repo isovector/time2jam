@@ -11,7 +11,7 @@ import Control.Lens ((+~), Lens')
 import Control.Monad.Writer
 import Data.List (nub, foldl')
 import Data.Maybe (isJust, mapMaybe)
-import JamPrelude
+import JamPrelude hiding (pos)
 import Motion
 
 moveCapsule :: V3 -> Capsule -> Capsule

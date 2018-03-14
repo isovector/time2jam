@@ -1,3 +1,4 @@
+{-# LANGUAGE DataKinds        #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE PatternSynonyms  #-}
 {-# LANGUAGE RecordWildCards  #-}
@@ -8,6 +9,7 @@ module Types
   , Schema
   ) where
 
+import Data.Ecstasy
 import Control.Lens
 import Control.Monad.Coroutine
 import Control.Monad.Coroutine.SuspensionFunctors
@@ -135,7 +137,7 @@ data GameState
   | OnMoon
     { _gsOldGame  :: Game
     , _gsBaller   :: Baller
-    , _gsProgress :: Time
+    , _gsProgress :: Float
     }
 
 
@@ -218,6 +220,19 @@ data Stats = Stats
 instance Default Stats where
   def = Stats 5 1.5
 
+
+data ECSWorld f = World
+  { pos       :: Component f 'Field V2
+  , cap       :: Component f 'Field Capsule
+  , rawCtrl   :: Component f 'Field RawController
+  , ctrl      :: Component f 'Field Controller
+  , art       :: Component f 'Field Art
+  , stats     :: Component f 'Field Stats
+  , suspended :: Component f 'Field ()
+  , focus     :: Component f 'Unique ()
+  }
+
+type Sys = SystemT ECSWorld IO
 
 ------------------------------------------------------------------------------
 makePrisms ''Action
