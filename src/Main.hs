@@ -8,6 +8,7 @@
 
 module Main where
 
+import Camera
 import Control.Monad.Writer (runWriter)
 import Ball
 import Baller
@@ -63,6 +64,7 @@ runGame _ = do
       newEntity defEntity
         { baller = Just b
         , avatar = Just ()
+        , focus  = Just ()
         }
 
   game <- fmap fst . foldmp start . runEcstasy $ do
@@ -71,6 +73,15 @@ runGame _ = do
                                                       <*> oldCtrl
                                                       <*> controller
     let ctrl' = foldController rctrl rctrl'
+
+    mcf <- fmap listToMaybe . efor . const $ do
+      with focus
+      get $ fmap (view $ bCap . capPos) . baller
+    for_ mcf $ \cf -> emap $ do
+      c <- get camera
+      pure defEntity'
+        { camera = Set $ updateCam dt $ c & camFocus .~ cf
+        }
 
     emap $ with avatar >> pure defEntity'
       { ctrl    = Set ctrl'
@@ -119,7 +130,7 @@ runGame _ = do
     now <- sample $ totalTime clock
 
     sample $ fmap snd $ yieldSystemT g $ do
-      cam     <- fmap head . efor . const $ get camera
+      cam     <- fmap (maybe def id . listToMaybe) . efor . const $ get camera
       ballers <- efor . const $ get baller
 
       pure $ centeredCollage (round gameWidth)

@@ -17,6 +17,7 @@ module JamPrelude
   , module Data.Ecstasy
   , module Data.Foldable
   , module Data.Traversable
+  , listToMaybe
   ) where
 
 import Control.Arrow
@@ -29,7 +30,7 @@ import Data.Default
 import Data.Foldable (traverse_, for_)
 import Data.Traversable (traverse, for)
 import Data.Ecstasy
-import Data.Maybe (isJust)
+import Data.Maybe (isJust, listToMaybe)
 import Data.Monoid ((<>))
 import Data.Tuple (swap)
 import Game.Sequoia
