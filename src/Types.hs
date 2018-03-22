@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds        #-}
+{-# LANGUAGE DeriveGeneric    #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE PatternSynonyms  #-}
 {-# LANGUAGE RecordWildCards  #-}
@@ -137,7 +138,7 @@ data GameState
   | OnMoon
     { _gsOldGame  :: Game
     , _gsBaller   :: Baller
-    , _gsProgress :: Float
+    , _gsProgress :: Time
     }
 
 
@@ -222,7 +223,7 @@ instance Default Stats where
 
 
 data ECSWorld f = World
-  { pos       :: Component f 'Field V2
+  { color     :: Component f 'Field Color
   , cap       :: Component f 'Field Capsule
   , rawCtrl   :: Component f 'Field RawController
   , ctrl      :: Component f 'Field Controller
@@ -230,9 +231,11 @@ data ECSWorld f = World
   , stats     :: Component f 'Field Stats
   , suspended :: Component f 'Field ()
   , focus     :: Component f 'Unique ()
-  }
+  , avatar    :: Component f 'Unique ()
+  , camera    :: Component f 'Unique Camera
+  } deriving (Generic)
 
-type Sys = SystemT ECSWorld IO
+type Sys = SystemT ECSWorld N
 
 ------------------------------------------------------------------------------
 makePrisms ''Action

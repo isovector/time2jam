@@ -10,17 +10,21 @@ module JamPrelude
   , module Types
   , module JamPrelude
   , first, second
-  , join, forM, forM_, liftM2
   , liftIO
+  , lift
   , bool
+  , module Control.Monad
+  , module Data.Ecstasy
   ) where
 
 import Control.Arrow
 import Control.Lens
 import Control.Monad
 import Control.Monad.IO.Class (liftIO)
+import Control.Monad.Trans.Class (lift)
 import Data.Bool (bool)
 import Data.Default
+import Data.Ecstasy
 import Data.Maybe (isJust)
 import Data.Monoid ((<>))
 import Data.Tuple (swap)
