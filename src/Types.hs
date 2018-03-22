@@ -223,13 +223,9 @@ instance Default Stats where
 
 
 data ECSWorld f = World
-  { color     :: Component f 'Field Color
-  , cap       :: Component f 'Field Capsule
-  , rawCtrl   :: Component f 'Field RawController
+  { rawCtrl   :: Component f 'Field RawController
   , ctrl      :: Component f 'Field Controller
-  , art       :: Component f 'Field Art
-  , stats     :: Component f 'Field Stats
-  , suspended :: Component f 'Field ()
+  , baller    :: Component f 'Field Baller
   , focus     :: Component f 'Unique ()
   , avatar    :: Component f 'Unique ()
   , camera    :: Component f 'Unique Camera

@@ -15,6 +15,8 @@ module JamPrelude
   , bool
   , module Control.Monad
   , module Data.Ecstasy
+  , module Data.Foldable
+  , module Data.Traversable
   ) where
 
 import Control.Arrow
@@ -24,6 +26,8 @@ import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Class (lift)
 import Data.Bool (bool)
 import Data.Default
+import Data.Foldable (traverse_, for_)
+import Data.Traversable (traverse, for)
 import Data.Ecstasy
 import Data.Maybe (isJust)
 import Data.Monoid ((<>))

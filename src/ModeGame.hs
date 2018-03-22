@@ -23,54 +23,54 @@ import Data.Tuple (swap)
 import JamPrelude
 import Motion
 
-updatePlay :: Time
-           -> Time
-           -> [Controller]
-           -> Game
-           -> Writer [String] Game
-updatePlay now dt ctrls g = do
-  let (ballers, ballerActs) = runWriter
-                            $ forM (zip3 (_gBallers g) ctrls [0..]) $ \(baller, ctrl, n) ->
-                                updateBaller now dt (PlayBaller ctrl $ possesses n) baller
-      shotAction = find (liftM2 (||) (has _Shoot) (has _Pass)) ballerActs
+-- updatePlay :: Time
+--            -> Time
+--            -> [Controller]
+--            -> Game
+--            -> Writer [String] Game
+-- updatePlay now dt ctrls g = do
+--   let (ballers, ballerActs) = runWriter
+--                             $ forM (zip3 (_gBallers g) ctrls [0..]) $ \(baller, ctrl, n) ->
+--                                 updateBaller now dt (PlayBaller ctrl $ possesses n) baller
+--       shotAction = find (liftM2 (||) (has _Shoot) (has _Pass)) ballerActs
 
-      (hits, g') = withObjects (g & gBallers .~ ballers)
-                               (swap <$> resolveCapsules objCap)
-      ball = _gBall g'
-      camera' = updateCam dt
-              $ _gCamera g
-              & camFocus .~ view (ballCap . capPos) ball
-      allHits  = duplicateAndSwap hits
-      ballHits = fmap snd $ filter (isBall . fst) allHits
-      (ball', ballActs) =
-        runWriter $
-          updateBall dt
-                     (fmap fst . preview _BallerObj
-                        =<< listToMaybe ballHits)
-                     ballers
-                     shotAction
-                     ball
-      allActs = ballerActs ++ ballActs
+--       (hits, g') = withObjects (g & gBallers .~ ballers)
+--                                (swap <$> resolveCapsules objCap)
+--       ball = _gBall g'
+--       camera' = updateCam dt
+--               $ _gCamera g
+--               & camFocus .~ view (ballCap . capPos) ball
+--       allHits  = duplicateAndSwap hits
+--       ballHits = fmap snd $ filter (isBall . fst) allHits
+--       (ball', ballActs) =
+--         runWriter $
+--           updateBall dt
+--                      (fmap fst . preview _BallerObj
+--                         =<< listToMaybe ballHits)
+--                      ballers
+--                      shotAction
+--                      ball
+--       allActs = ballerActs ++ ballActs
 
-      g'' = runIdentity $ withObjects (g' & gBall .~ ball'
-                                          & gCamera .~ camera')
-                        (Identity . doShove (getActions ballerActs _Shove))
+--       g'' = runIdentity $ withObjects (g' & gBall .~ ball'
+--                                           & gCamera .~ camera')
+--                         (Identity . doShove (getActions ballerActs _Shove))
 
-  _ <- handleActions allActs _Debug $ tell . return
-  _ <- handleActions allActs _Point $ \(n, p) ->
-    tell . pure $ show p <> " points for " <> show n
-  return . onAction allActs _ChangeGameMode g'' $ flip (set gMode) g''
+--   _ <- handleActions allActs _Debug $ tell . return
+--   _ <- handleActions allActs _Point $ \(n, p) ->
+--     tell . pure $ show p <> " points for " <> show n
+--   return . onAction allActs _ChangeGameMode g'' $ flip (set gMode) g''
 
- where
-   getActions acts p = mapMaybe (preview p) acts
-   handleActions acts p f = forM (getActions acts p) f
-   onAction acts p g_ f = maybe g_ f . listToMaybe $ getActions acts p
-   possesses i = maybe Doesnt
-                       (isOwner i)
-                       $ preview (ballState._BallOwned) $ _gBall g
-   isOwner i j | i == j           = Has
-               | (i `xor` 1) /= j = Opponent
-               | otherwise        = Doesnt
+--  where
+--    getActions acts p = mapMaybe (preview p) acts
+--    handleActions acts p f = forM (getActions acts p) f
+--    onAction acts p g_ f = maybe g_ f . listToMaybe $ getActions acts p
+--    possesses i = maybe Doesnt
+--                        (isOwner i)
+--                        $ preview (ballState._BallOwned) $ _gBall g
+--    isOwner i j | i == j           = Has
+--                | (i `xor` 1) /= j = Opponent
+--                | otherwise        = Doesnt
 
 waitForMotion :: Time -> Time ->  Game -> Game
 waitForMotion now dt g@Game{_gBallers, _gMode} =

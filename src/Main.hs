@@ -8,19 +8,17 @@
 
 module Main where
 
-import Game.Sequoia.Utils
-import AnimBank
+import Control.Monad.Writer (runWriter)
 import Ball
 import Baller
+import Basket
 import Constants
 import Control.FRPNow.Time (delayTime)
 import Control.Lens
-import Control.Monad.Writer (runWriter)
+import Court
 import Game.Sequoia.Keyboard
 import Input
 import JamPrelude
-import ModeGame
-import Art
 
 
 initGame :: Game
@@ -43,6 +41,16 @@ runEcstasy
 runEcstasy m = fmap fst . flip yieldSystemT m
 
 
+-- update ballers
+-- check for shots
+-- resolve capsules
+-- focus camera
+-- determine collisions
+-- check for ball collision
+-- update ball
+-- run shoves
+-- change game mode if necessary
+
 runGame :: Engine -> N (B Element)
 runGame _ = do
   clock      <- getClock
@@ -50,17 +58,35 @@ runGame _ = do
   oldCtrl    <- sample $ delayTime (deltaTime clock) def controller
 
   start <- flip runEcstasy (0, defWorld) $ do
-    void $ newEntity $ defEntity
-      { art = Just $ (Art __bDribble 0)
-      , color = Just $ rgb 1 0 0
-      }
+    newEntity $ defEntity { camera = Just def }
+    for_ (_gBallers initGame) $ \b ->
+      newEntity defEntity
+        { baller = Just b
+        , avatar = Just ()
+        }
 
   game <- fmap fst . foldmp start . runEcstasy $ do
     (now, dt, rctrl, rctrl') <- lift . sample $ (,,,) <$> totalTime clock
                                                       <*> deltaTime clock
                                                       <*> oldCtrl
                                                       <*> controller
-    let ctrl = foldController rctrl rctrl'
+    let ctrl' = foldController rctrl rctrl'
+
+    emap $ with avatar >> pure defEntity'
+      { ctrl    = Set ctrl'
+      , rawCtrl = Set rctrl'
+      }
+
+    emap $ do
+      b <- get baller
+      c <- get ctrl
+      pure defEntity'
+        { baller = Set
+                 . fst
+                 . runWriter
+                 $ updateBaller now dt (PlayBaller c Doesnt) b
+        }
+
     pure ()
 
   -- (game, _) <-
@@ -89,18 +115,20 @@ runGame _ = do
   --           False -> x & gsProgress +~ dt
 
   pure $ do
-    g <- sample game
+    g   <- sample game
     now <- sample $ totalTime clock
-    sample $ fmap snd $ yieldSystemT g $ do
-      camera <- fmap head . efor . const $ get camera
 
-      ballers <- efor . const $ (,,) <$> get cap
-                                     <*> get art
-                                     <*> getMaybe color
+    sample $ fmap snd $ yieldSystemT g $ do
+      cam     <- fmap head . efor . const $ get camera
+      ballers <- efor . const $ get baller
+
       pure $ centeredCollage (round gameWidth)
                              (round gameHeight)
-           $ fmap (\(p, a, c) -> drawArt a c now)
-           $ ballers
+           $ [ drawCourt court cam
+             , drawBasket cam RNet
+             , drawBasket cam LNet
+             ] ++
+           fmap (drawBaller cam now) ballers
 
 
 main :: IO ()
