@@ -2,15 +2,15 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TupleSections   #-}
+{-# LANGUAGE ViewPatterns    #-}
 
 module Capsule where
 
-import Data.Foldable (minimumBy, maximumBy)
 import Control.Comonad
 import Control.Comonad.Store
 import Control.Lens ((+~), Lens')
 import Control.Monad.Writer
-import Data.List (nubBy, foldl')
+import Data.List (nub, foldl')
 import Data.Maybe (isJust, mapMaybe)
 import JamPrelude
 import Motion
@@ -40,21 +40,22 @@ checkCapsules a b = isJust (capsuleIntersection a b)
 
 
 stepPos
-    :: (s -> s -> Ordering)
+    :: Ord o
+    => (s -> o)
     -> [s]
     -> Store s Capsule
-    -> Writer [(s, s)] Capsule
+    -> Writer [(o, o)] Capsule
 stepPos ord as w = do
   tell ids
   pure . flip moveCapsule cap
-       . showTrace
        . sum
        $ fmap (mult *^) forces
   where
     cap = extract w
     loc = _capPos cap
     me  = pos w
-    isMovable = showTrace $ not $ _capEthereal cap || isJust (_capMotion cap)
+    meord = ord me
+    isMovable = not $ _capEthereal cap || isJust (_capMotion cap)
     forces =
       if isMovable
          then fmap (signorm . (loc -) . _capPos . snd)
@@ -62,19 +63,20 @@ stepPos ord as w = do
          else []
     ints = filter (checkCapsules cap . snd)
          . fmap (\s -> (s, flip peek w s))
-         $ filter ((/= EQ) . ord me) as
+         $ filter ((/= meord) . ord) as
     realInts = filter (not . _capEthereal . snd) ints
-    ids = fmap (\s -> (minimumBy ord [s, me], maximumBy ord [s, me])) $ fmap fst ints
+    ids = fmap (\(ord -> s) -> (min s meord, max s meord)) $ fmap fst ints
     mult = ((1 / 10) *)
          . minimum
          . fmap _capRadius
          $ cap : (snd <$> realInts)
 
 stepAllPos
-    :: (s -> s -> Ordering)
+    :: (Ord o)
+    => (s -> o)
     -> Lens' s Capsule
     -> [s]
-    -> Writer [(s, s)] [s]
+    -> Writer [(o, o)] [s]
 stepAllPos ord l caps =
     forM caps $ \s -> do
       newCap <- peek s w
@@ -85,32 +87,30 @@ stepAllPos ord l caps =
       $ head caps
 
 resolveCapsules
-    :: (s -> s -> Ordering)
+    :: (Eq s, Ord o)
+    => (s -> o)
     -> Lens' s Capsule
     -> [s]
-    -> ([s], [(s, s)])
+    -> ([s], [(o, o)])
 resolveCapsules ord l
-  = second (nubBy . (fmap . fmap) (== EQ)
-                  $ \(a, b) (c, d) -> ord a c <> ord b d)
+  = second nub
   . runWriter
   . findFixedPoint
-      ((foldl' (\c -> mappend c . uncurry ord) EQ .) . zip)
       1
       (stepAllPos ord l)
 
 findFixedPoint
-    :: (Monad m)
-    => (a -> a -> Ordering)
-    -> Int
+    :: (Monad m, Eq a)
+    => Int
     -> (a -> m a)
     -> a
     -> m a
-findFixedPoint ord n f a = go n a (f a)
+findFixedPoint n f a = go n a (f a)
   where
      go 0 _ mb = mb
      go i b mb = do
       b' <- mb
-      if ord b b' == EQ
+      if b == b'
          then return b
          else go (i - 1) b' (f b')
 

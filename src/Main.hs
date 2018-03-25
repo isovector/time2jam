@@ -8,8 +8,6 @@
 
 module Main where
 
-import Debug.Trace (trace)
-import Data.Function (on)
 import Capsule
 import Camera
 import Control.Monad.Writer (runWriter)
@@ -103,7 +101,7 @@ runGame _ = do
 
     -- resolve collision
     entBallers <- efor $ \ent -> (,) <$> pure ent <*> get baller
-    let (bs, cols) = resolveCapsules (compare `on` fst) (_2 . bCap) entBallers
+    let (bs, cols) = resolveCapsules fst (_2 . bCap) entBallers
     for_ bs $ \(ent, b) -> setEntity ent $ defEntity' { baller = Set b }
 
 
