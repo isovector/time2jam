@@ -8,16 +8,18 @@
 module Types
   ( module Types
   , Schema
+  , showTrace
   ) where
 
-import Data.Ecstasy
 import Control.Lens
 import Control.Monad.Coroutine
 import Control.Monad.Coroutine.SuspensionFunctors
 import Control.Monad.Writer (Writer)
 import Data.Default
+import Data.Ecstasy
 import Data.Spriter.Types
 import Game.Sequoia
+import Game.Sequoia.Utils (showTrace)
 
 
 

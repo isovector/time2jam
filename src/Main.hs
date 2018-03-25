@@ -8,6 +8,9 @@
 
 module Main where
 
+import Debug.Trace (trace)
+import Data.Function (on)
+import Capsule
 import Camera
 import Control.Monad.Writer (runWriter)
 import Ball
@@ -27,9 +30,9 @@ initGame = Game
   { _gCamera  = def
   , _gBall    = defaultBall
   , _gBallers = [ defaultBaller & bCap.capPos .~ V3 (-2) 0 (-2)
-                , defaultBaller & bCap.capPos .~ V3 (-2) 0 2
-                , otherBaller & bCap.capPos .~ V3 2 0 2
-                , otherBaller & bCap.capPos .~ V3 2 0 (-2)
+                , defaultBaller & bCap.capPos .~ V3 (-2) 0   2
+                , otherBaller   & bCap.capPos .~ V3   2  0   2
+                , otherBaller   & bCap.capPos .~ V3   2  0 (-2)
                 ]
   , _gMode = Play
   }
@@ -42,10 +45,8 @@ runEcstasy
 runEcstasy m = fmap fst . flip yieldSystemT m
 
 
--- update ballers
 -- check for shots
 -- resolve capsules
--- focus camera
 -- determine collisions
 -- check for ball collision
 -- update ball
@@ -72,8 +73,8 @@ runGame _ = do
                                                       <*> deltaTime clock
                                                       <*> oldCtrl
                                                       <*> controller
-    let ctrl' = foldController rctrl rctrl'
 
+    -- update camera
     mcf <- fmap listToMaybe . efor . const $ do
       with focus
       get $ fmap (view $ bCap . capPos) . baller
@@ -83,11 +84,13 @@ runGame _ = do
         { camera = Set $ updateCam dt $ c & camFocus .~ cf
         }
 
+    -- set controller on avatar
     emap $ with avatar >> pure defEntity'
-      { ctrl    = Set ctrl'
+      { ctrl    = Set $ foldController rctrl rctrl'
       , rawCtrl = Set rctrl'
       }
 
+    -- update ballers
     emap $ do
       b <- get baller
       c <- get ctrl
@@ -97,6 +100,12 @@ runGame _ = do
                  . runWriter
                  $ updateBaller now dt (PlayBaller c Doesnt) b
         }
+
+    -- resolve collision
+    entBallers <- efor $ \ent -> (,) <$> pure ent <*> get baller
+    let (bs, cols) = resolveCapsules (compare `on` fst) (_2 . bCap) entBallers
+    for_ bs $ \(ent, b) -> setEntity ent $ defEntity' { baller = Set b }
+
 
     pure ()
 
