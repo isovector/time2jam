@@ -44,8 +44,6 @@ runEcstasy m = fmap fst . flip yieldSystemT m
 
 
 -- check for shots
--- resolve capsules
--- determine collisions
 -- check for ball collision
 -- update ball
 -- run shoves

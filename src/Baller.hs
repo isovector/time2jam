@@ -152,7 +152,7 @@ updateBaller now dt (PlayBaller ctrl p) b@Baller{..} = do
       case (_bState, p, hasMotion, actionType) of
         (BSJumping Has,    Has,    False, _)    -> BSGrounded
         (BSJumping Doesnt, Has,    _,     _)    -> BSJumping Doesnt
-        (BSJumping _,      _, False, _)    -> BSDefault
+        (BSJumping _,      _,      False, _)    -> BSDefault
         (BSDunking,        _,      False, _)    -> BSDefault
         (bs,               _,      True,  _)    -> bs
         (_,                _,      False, Dunk) -> BSDunking
@@ -259,32 +259,6 @@ drawBaller cam now b@Baller{..} =
                 RNet -> id
                 LNet -> flipX
 
-doShove :: [Shove] -> [GObject] -> [GObject]
-doShove shoves objs = do
-  obj <- objs
-  let hits = join . forM shoves $ \shove -> do
-        let (pos, dir, dist, force) = view _ShoveData shove
-            dpos = obj ^. objCap.capPos - pos
-        guard $ dot dpos dir > 0.75
-        guard $ norm dpos <= dist
-        return $ force *^ dpos
-
-      forces = sum hits
-
-  case (forces, obj) of
-    (0, _) -> return obj
-
-    (_, BallerObj _ _) ->
-      return $ flip (over objCap) obj
-             $ \c -> setMotion c . motion $ do
-               let pos = c ^. capPos
-               runBezier 0.15 [pos + forces] pos
-
-    (_, BallObj _) ->
-      return $ flip (over objCap) obj
-            $ \c -> setMotion c . motion $ do
-              let pos = c ^. capPos
-              runBezier 0.15 [pos + forces] pos
 
 ballerHeightMult :: Baller -> Double
 ballerHeightMult b = view (bCap.capHeight) b / standardBallerHeight
